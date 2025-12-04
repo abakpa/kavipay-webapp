@@ -1,0 +1,74 @@
+import { NavLink, Link } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  CreditCard,
+  User,
+  Settings,
+  ShieldCheck,
+  Smartphone,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.png';
+
+interface SidebarProps {
+  className?: string;
+}
+
+const navItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/cards', label: 'Cards', icon: CreditCard },
+  { to: '/utilities', label: 'Utilities', icon: Smartphone },
+  { to: '/kyc', label: 'Verification', icon: ShieldCheck },
+  { to: '/profile', label: 'Profile', icon: User },
+  { to: '/settings', label: 'Settings', icon: Settings },
+];
+
+export function Sidebar({ className }: SidebarProps) {
+  return (
+    <aside
+      className={cn(
+        'w-64 flex-col border-r border-border bg-card',
+        className
+      )}
+    >
+      {/* Logo */}
+      <div className="flex h-16 items-center border-b border-border px-4">
+        <Link to="/dashboard">
+          <img
+            src={logo}
+            alt="KaviPay"
+            className="h-8"
+          />
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 p-4">
+        {navItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-kaviBlue/10 text-kaviBlue'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )
+            }
+          >
+            <Icon className="h-5 w-5" />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="border-t border-border p-4">
+        <p className="text-xs text-muted-foreground">
+          &copy; {new Date().getFullYear()} KaviPay
+        </p>
+      </div>
+    </aside>
+  );
+}

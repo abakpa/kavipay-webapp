@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+@theme {
+  /* KaviPay brand colors */
+  --color-kaviBlue: #4DA6FF;
+  --color-kaviNavy: #0A0F1C;
+  --color-kaviGold: #F59E0B;
+
+  /* Legacy colors (backwards compatibility) */
+  --color-rainBlue: #4DA6FF;
+  --color-rainGray: #1E293B;
+
+  /* Elevated card background */
+  --color-kaviCard: #151B2E;
+
+  /* Theme colors for light mode */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+  --color-primary: #4DA6FF;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #94a3b8;
+  --color-secondary-foreground: #0f172a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-accent: #F59E0B;
+  --color-accent-foreground: #ffffff;
+  --color-input: #e2e8f0;
+  --color-ring: #4DA6FF;
+
+  /* Border radius */
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
+
+  /* Font family */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Dark mode overrides */
+.dark {
+  --color-background: #0A0F1C;
+  --color-foreground: #ffffff;
+  --color-card: #151B2E;
+  --color-card-foreground: #ffffff;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #1e293b;
+  --color-primary: #4DA6FF;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #64748b;
+  --color-secondary-foreground: #ffffff;
+  --color-input: #1e293b;
+  --color-ring: #4DA6FF;
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Focus visible styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
