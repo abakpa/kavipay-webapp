@@ -149,3 +149,64 @@ export const getPresignedUploadUrl = async (
   const response = await api.post('/kyc/presigned-url', { fileName, contentType });
   return response.data;
 };
+
+/**
+ * Create Payscribe customer (payment account) after KYC approval
+ */
+export const createPayscribeCustomer = async (payload: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  bvn?: string;
+}): Promise<{ success: boolean; customerId?: string; message?: string }> => {
+  const response = await api.post('/create-payscribe-customer', payload);
+  return response.data;
+};
+
+/**
+ * Map backend KYC status to unified frontend status
+ */
+export type UnifiedKYCStatus =
+  | 'not_started'
+  | 'in_progress'
+  | 'pending_review'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'requires_resubmission';
+
+export const mapToUnifiedStatus = (
+  backendStatus: string | undefined | null
+): UnifiedKYCStatus => {
+  if (!backendStatus) return 'not_started';
+
+  const status = backendStatus.toLowerCase();
+
+  // Approved states
+  if (['verified', 'approved', 'completed'].includes(status)) {
+    return 'approved';
+  }
+
+  // Under review states
+  if (['pending', 'processing', 'reviewing', 'under_review'].includes(status)) {
+    return 'under_review';
+  }
+
+  // Rejected states
+  if (['declined', 'rejected', 'failed'].includes(status)) {
+    return 'rejected';
+  }
+
+  // In progress states
+  if (['in_progress', 'form_submitted', 'session_created'].includes(status)) {
+    return 'in_progress';
+  }
+
+  // Not verified
+  if (['not_verified', 'not_started'].includes(status)) {
+    return 'not_started';
+  }
+
+  return 'not_started';
+};

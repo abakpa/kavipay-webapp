@@ -3,16 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { AccountLockoutBanner } from '@/components/auth/AccountLockoutBanner';
+import { useAccountLockout } from '@/hooks/useAccountLockout';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export function Login() {
   const navigate = useNavigate();
@@ -20,20 +23,44 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
 
   const {
+    isLockedOut,
+    attempts,
+    remainingAttempts,
+    formattedTimeRemaining,
+    recordFailedAttempt,
+    resetAttempts,
+    shouldShowWarning,
+  } = useAccountLockout({
+    maxAttempts: 5,
+    lockoutDuration: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: LoginFormData) => {
+    if (isLockedOut) {
+      setError('Account is locked. Please wait before trying again.');
+      return;
+    }
+
     try {
       setError(null);
       await login(data.email, data.password);
+      resetAttempts();
       navigate('/dashboard');
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch {
+      recordFailedAttempt();
+      if (remainingAttempts <= 1) {
+        setError('Account locked due to too many failed attempts.');
+      } else {
+        setError('Invalid email or password');
+      }
     }
   };
 
@@ -41,8 +68,9 @@ export function Login() {
     try {
       setError(null);
       await loginWithGoogle();
+      resetAttempts();
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with Google');
     }
   };
@@ -52,40 +80,66 @@ export function Login() {
       <h1 className="mb-2 text-2xl font-bold text-white">Welcome back</h1>
       <p className="mb-6 text-muted-foreground">Sign in to your account</p>
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+      <AccountLockoutBanner
+        isLockedOut={isLockedOut}
+        formattedTimeRemaining={formattedTimeRemaining}
+        attempts={attempts}
+        remainingAttempts={remainingAttempts}
+        shouldShowWarning={shouldShowWarning}
+      />
+
+      {error && !isLockedOut && (
+        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          error={errors.email?.message}
-          {...register('email')}
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="Enter your email"
+            className="pl-10"
+            error={errors.email?.message}
+            {...register('email')}
+          />
+        </div>
 
-        <Input
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          error={errors.password?.message}
-          {...register('password')}
-        />
+        <div className="relative">
+          <Lock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            className="pl-10"
+            error={errors.password?.message}
+            {...register('password')}
+          />
+        </div>
 
         <div className="flex justify-end">
           <Link
             to="/auth/forgot-password"
-            className="text-sm text-kaviBlue hover:underline"
+            className="text-sm font-medium text-kaviBlue hover:underline"
           >
             Forgot password?
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
+        <Button
+          type="submit"
+          size="lg"
+          className="h-[52px] w-full gap-2 rounded-xl text-base font-semibold shadow-lg shadow-kaviBlue/20"
+          disabled={isSubmitting || isLockedOut}
+        >
+          {!isSubmitting && !isLockedOut && <LogIn className="h-5 w-5" />}
+          {isLockedOut
+            ? `Locked (${formattedTimeRemaining})`
+            : isSubmitting
+              ? 'Signing In...'
+              : 'Sign In'}
         </Button>
       </form>
 

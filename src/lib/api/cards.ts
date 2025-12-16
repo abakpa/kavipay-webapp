@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { api } from './index';
+import { api, miningApi } from './index';
 import { parseApiError } from '../../utils/errorUtils';
 import {
   CardProvider,
@@ -488,7 +488,8 @@ export const topupCard = async (
   cardId: string,
   amount: number
 ): Promise<CardTransaction> => {
-  const response = await api.post(`/cards/${cardId}/topup`, { amount });
+  // Use miningApi for topup (requires mining JWT token)
+  const response = await miningApi.post(`/cards/${cardId}/topup`, { amount });
   return response.data;
 };
 
@@ -496,7 +497,8 @@ export const withdrawFromCard = async (
   cardId: string,
   amount: number
 ): Promise<CardTransaction> => {
-  const response = await api.post(`/cards/${cardId}/withdraw`, { amount });
+  // Use miningApi for withdraw (requires mining JWT token)
+  const response = await miningApi.post(`/cards/${cardId}/withdraw`, { amount });
   return response.data;
 };
 
@@ -542,8 +544,14 @@ export const createCardPreOrder = async (cardData: {
 };
 
 export const getCardPreOrders = async (): Promise<CardPreOrder[]> => {
-  const response = await api.get('/cards/pre-orders');
-  return response.data.preOrders;
+  try {
+    const response = await api.get('/cards/pre-orders');
+    return response.data?.preOrders || [];
+  } catch (error) {
+    // Return empty array if API fails to prevent stuck loading states
+    console.error('Failed to load pre-orders:', error);
+    return [];
+  }
 };
 
 export const processCardPreOrder = async (
@@ -554,10 +562,36 @@ export const processCardPreOrder = async (
   card: VirtualCard;
   preOrder: CardPreOrder;
 }> => {
-  const requestBody: { bvn?: string } = {};
-  if (bvn) {
-    requestBody.bvn = bvn;
+  try {
+    const requestBody: { bvn?: string } = {};
+    if (bvn) {
+      requestBody.bvn = bvn;
+    }
+    const response = await api.post(`/cards/pre-orders/${preOrderId}/process`, requestBody);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const errorData = error.response.data as ApiErrorResponse;
+      const status = error.response.status;
+
+      // Extract user-friendly error message
+      let errorMessage = 'Failed to process card. Please try again.';
+
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.error) {
+        errorMessage = errorData.error;
+      }
+
+      // Check for BVN_REQUIRED error code
+      const errorCode = (errorData as { code?: string })?.code;
+
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = status;
+      enhancedError.details = { code: errorCode, ...errorData };
+      throw enhancedError;
+    }
+    throw error;
   }
-  const response = await api.post(`/cards/pre-orders/${preOrderId}/process`, requestBody);
-  return response.data;
 };

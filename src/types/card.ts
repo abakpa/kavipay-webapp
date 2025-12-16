@@ -296,13 +296,26 @@ export interface CardPreOrder {
 // KYC Types
 export const KYCStatus = {
   NOT_STARTED: 'not_started',
+  IN_PROGRESS: 'in_progress',
   PENDING: 'pending',
+  PENDING_REVIEW: 'pending_review',
   UNDER_REVIEW: 'under_review',
   APPROVED: 'approved',
   REJECTED: 'rejected',
+  REQUIRES_RESUBMISSION: 'requires_resubmission',
   EXPIRED: 'expired',
 } as const;
 export type KYCStatus = (typeof KYCStatus)[keyof typeof KYCStatus];
+
+// Unified KYC status for frontend display
+export type UnifiedKYCStatus =
+  | 'not_started'
+  | 'in_progress'
+  | 'pending_review'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'requires_resubmission';
 
 export const DocumentType = {
   PASSPORT: 'passport',
@@ -328,6 +341,7 @@ export interface KYCData {
 export interface KYCStatusResponse {
   kycStatus: 'not_verified' | 'pending' | 'verified' | 'rejected';
   kycVerifiedAt?: string;
+  rejectionReason?: string;
   kycData?: {
     firstName: string;
     lastName: string;
@@ -340,6 +354,56 @@ export interface KYCStatusResponse {
     identityDocumentURL: string;
   };
   hasPayscribeCustomer: boolean;
+}
+
+// KYCAID Session Types
+export interface KYCAIDSession {
+  applicantId: string;
+  verificationId: string;
+  formId: string;
+  formUrl: string;
+  formToken: string;
+}
+
+export interface KYCAIDVerification {
+  verificationId: string;
+  applicantId: string;
+  status: string;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  declineReasons?: string[];
+  comment?: string;
+}
+
+export interface KYCAIDSyncResponse {
+  verificationId: string;
+  applicantId: string;
+  status: string;
+  verified: boolean;
+  kycStatus: string;
+  synced: boolean;
+  syncedAt: string;
+  completedAt?: string;
+  declineReasons?: string[];
+}
+
+// KYCAID Form Data
+export interface KYCAIDFormData {
+  firstName: string;
+  lastName: string;
+  dob: string; // YYYY-MM-DD format
+  country: string; // ISO alpha-2 country code
+  phoneNumber: string;
+}
+
+export interface KYCAIDAddressData {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
 }
 
 export interface PersonalInfo {

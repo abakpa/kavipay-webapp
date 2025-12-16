@@ -7,6 +7,9 @@ import { Mail, Lock, User, LogIn, UserPlus, Gift } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { AuthInput } from '@/components/auth/AuthInput';
+import { AccountLockoutBanner } from '@/components/auth/AccountLockoutBanner';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import { useAccountLockout } from '@/hooks/useAccountLockout';
 
 // Schemas
 const loginSchema = z.object({
@@ -25,10 +28,23 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 // Login Form Component
-function LoginForm({ onSwitchTab }: { onSwitchTab: (email?: string) => void }) {
+function LoginForm({ onSwitchTab: _onSwitchTab }: { onSwitchTab: (email?: string) => void }) {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    isLockedOut,
+    attempts,
+    remainingAttempts,
+    formattedTimeRemaining,
+    recordFailedAttempt,
+    resetAttempts,
+    shouldShowWarning,
+  } = useAccountLockout({
+    maxAttempts: 5,
+    lockoutDuration: 5 * 60 * 1000, // 5 minutes
+  });
 
   const {
     register,
@@ -39,18 +55,37 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (email?: string) => void }) {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    if (isLockedOut) {
+      setError('Account is locked. Please wait before trying again.');
+      return;
+    }
+
     try {
       setError(null);
       await login(data.email, data.password);
+      resetAttempts(); // Clear attempts on successful login
       navigate('/dashboard');
     } catch {
-      setError('Invalid email or password');
+      recordFailedAttempt();
+      if (remainingAttempts <= 1) {
+        setError('Account locked due to too many failed attempts.');
+      } else {
+        setError('Invalid email or password');
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
-      {error && (
+      <AccountLockoutBanner
+        isLockedOut={isLockedOut}
+        formattedTimeRemaining={formattedTimeRemaining}
+        attempts={attempts}
+        remainingAttempts={remainingAttempts}
+        shouldShowWarning={shouldShowWarning}
+      />
+
+      {error && !isLockedOut && (
         <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
@@ -88,10 +123,14 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (email?: string) => void }) {
           type="submit"
           size="lg"
           className="h-[52px] w-full gap-2 rounded-xl text-base font-semibold shadow-lg shadow-kaviBlue/20"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isLockedOut}
         >
-          {!isSubmitting && <LogIn className="h-5 w-5" />}
-          {isSubmitting ? 'Signing In...' : 'Sign In'}
+          {!isSubmitting && !isLockedOut && <LogIn className="h-5 w-5" />}
+          {isLockedOut
+            ? `Locked (${formattedTimeRemaining})`
+            : isSubmitting
+              ? 'Signing In...'
+              : 'Sign In'}
         </Button>
       </div>
     </form>
@@ -100,7 +139,7 @@ function LoginForm({ onSwitchTab }: { onSwitchTab: (email?: string) => void }) {
 
 // Register Form Component
 function RegisterForm({
-  onSwitchTab,
+  onSwitchTab: _onSwitchTab,
 }: {
   onSwitchTab: (email?: string) => void;
 }) {
@@ -111,10 +150,13 @@ function RegisterForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  const watchPassword = watch('password', '');
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -169,14 +211,17 @@ function RegisterForm({
         {...register('email')}
       />
 
-      <AuthInput
-        label="Password"
-        type="password"
-        placeholder="Create a secure password"
-        icon={Lock}
-        error={errors.password?.message}
-        {...register('password')}
-      />
+      <div className="space-y-2">
+        <AuthInput
+          label="Password"
+          type="password"
+          placeholder="Create a secure password"
+          icon={Lock}
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <PasswordStrengthIndicator password={watchPassword} />
+      </div>
 
       <AuthInput
         label="Upline ID (Optional)"
@@ -209,7 +254,7 @@ export function AuthPage() {
   const initialTab = searchParams.get('tab') === 'register' ? 'register' : 'login';
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
 
-  const handleSwitchToLogin = (email?: string) => {
+  const handleSwitchToLogin = (_email?: string) => {
     setActiveTab('login');
     // Could prefill email if needed
   };

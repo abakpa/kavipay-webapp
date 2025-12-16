@@ -1,42 +1,53 @@
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useKYC } from '@/contexts/KYCContext';
+import { KYCStatusDisplay } from '@/components/kyc/KYCStatusDisplay';
 
 export function KYCStatus() {
-  // TODO: Fetch KYC status from KYCContext
+  const navigate = useNavigate();
+  const { unifiedStatus } = useKYC();
+
+  const handleStartVerification = () => {
+    navigate('/kyc');
+  };
+
+  const handleContinue = () => {
+    if (unifiedStatus === 'approved') {
+      navigate('/cards');
+    } else {
+      navigate('/kyc');
+    }
+  };
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/kyc">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        </Link>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-accent hover:bg-accent/80"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Verification Status</h1>
+          <p className="text-muted-foreground">Track your verification progress</p>
+        </div>
       </div>
 
-      <div>
-        <h1 className="text-2xl font-bold">Verification Status</h1>
-        <p className="text-muted-foreground">Track your verification progress</p>
-      </div>
-
+      {/* Status Display */}
       <Card>
-        <CardContent className="flex flex-col items-center py-8 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-kaviGold/10">
-            <Clock className="h-8 w-8 text-kaviGold" />
-          </div>
-          <h3 className="mb-2 text-lg font-semibold">Not Started</h3>
-          <p className="text-muted-foreground">
-            You haven't started the verification process yet.
-          </p>
+        <CardContent className="py-6">
+          <KYCStatusDisplay
+            onStartOver={handleStartVerification}
+            onContinue={handleContinue}
+            showActions={true}
+          />
         </CardContent>
       </Card>
-
-      <Link to="/kyc">
-        <Button className="w-full">Start Verification</Button>
-      </Link>
     </div>
   );
 }
+
+export default KYCStatus;

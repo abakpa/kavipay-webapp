@@ -3,22 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Mail, Lock, User, UserPlus, Gift } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 
 const registerSchema = z
   .object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
+    referralCode: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
   });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function Register() {
   const navigate = useNavigate();
@@ -28,18 +32,35 @@ export function Register() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterForm>({
+  } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterForm) => {
+  const watchPassword = watch('password', '');
+
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       setError(null);
-      await registerUser(data.email, data.password);
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        referralCode: data.referralCode,
+      });
       navigate('/dashboard');
-    } catch (err) {
-      setError('Failed to create account. Email may already be in use.');
+    } catch (err: unknown) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        err.code === 'auth/email-already-in-use'
+      ) {
+        setError('This email is already registered. Please sign in instead.');
+      } else {
+        setError('Failed to create account. Please try again.');
+      }
     }
   };
 
@@ -48,7 +69,7 @@ export function Register() {
       setError(null);
       await loginWithGoogle();
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with Google');
     }
   };
@@ -59,38 +80,83 @@ export function Register() {
       <p className="mb-6 text-muted-foreground">Get started with KaviPay</p>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          error={errors.email?.message}
-          {...register('email')}
-        />
+        <div className="relative">
+          <User className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Full Name"
+            type="text"
+            placeholder="Enter your full name"
+            className="pl-10"
+            error={errors.name?.message}
+            {...register('name')}
+          />
+        </div>
 
-        <Input
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          error={errors.password?.message}
-          {...register('password')}
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="Enter your email"
+            className="pl-10"
+            error={errors.email?.message}
+            {...register('email')}
+          />
+        </div>
 
-        <Input
-          label="Confirm Password"
-          type="password"
-          placeholder="••••••••"
-          error={errors.confirmPassword?.message}
-          {...register('confirmPassword')}
-        />
+        <div className="space-y-2">
+          <div className="relative">
+            <Lock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+            <Input
+              label="Password"
+              type="password"
+              placeholder="Create a secure password"
+              className="pl-10"
+              error={errors.password?.message}
+              {...register('password')}
+            />
+          </div>
+          <PasswordStrengthIndicator password={watchPassword} />
+        </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Create account'}
+        <div className="relative">
+          <Lock className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm your password"
+            className="pl-10"
+            error={errors.confirmPassword?.message}
+            {...register('confirmPassword')}
+          />
+        </div>
+
+        <div className="relative">
+          <Gift className="absolute left-3 top-9 h-5 w-5 text-muted-foreground" />
+          <Input
+            label="Referral Code (Optional)"
+            type="text"
+            placeholder="Enter referral code"
+            className="pl-10"
+            error={errors.referralCode?.message}
+            {...register('referralCode')}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          size="lg"
+          className="h-[52px] w-full gap-2 rounded-xl bg-emerald-500 text-base font-semibold shadow-lg shadow-emerald-500/20 hover:bg-emerald-500/90"
+          disabled={isSubmitting}
+        >
+          {!isSubmitting && <UserPlus className="h-5 w-5" />}
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </Button>
       </form>
 
@@ -127,12 +193,35 @@ export function Register() {
         Continue with Google
       </Button>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link to="/auth/login" className="text-kaviBlue hover:underline">
-          Sign in
-        </Link>
-      </p>
+      <div className="mt-6 space-y-4">
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{' '}
+          <Link to="/auth/login" className="text-kaviBlue hover:underline">
+            Sign in
+          </Link>
+        </p>
+
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          By creating an account, you agree to our{' '}
+          <a
+            href="https://ploutoslabs.io/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-kaviBlue underline hover:text-kaviBlue/80"
+          >
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a
+            href="https://ploutoslabs.io/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-kaviBlue underline hover:text-kaviBlue/80"
+          >
+            Privacy Policy
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
