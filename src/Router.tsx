@@ -34,6 +34,9 @@ import { Referral } from '@/pages/referral/Referral';
 import { Profile } from '@/pages/profile/Profile';
 import { Settings } from '@/pages/profile/Settings';
 
+// Utilities
+import { UtilitiesHome, Airtime, Data, Electricity, TV, UtilityResult } from '@/pages/utilities';
+
 // Error Pages
 import { NotFound } from '@/pages/NotFound';
 
@@ -82,6 +85,20 @@ export const router = createBrowserRouter([
       // Profile & Settings
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
+
+      // Utilities
+      { path: 'utilities', element: <UtilitiesHome /> },
+      { path: 'utilities/airtime', element: <Airtime /> },
+      { path: 'utilities/data', element: <Data /> },
+      { path: 'utilities/electricity', element: <Electricity /> },
+      { path: 'utilities/tv', element: <TV /> },
+      { path: 'utilities/result', element: <UtilityResult /> },
+
+      // Legacy utility routes (redirect to new paths)
+      { path: 'airtime', element: <Navigate to="/utilities/airtime" replace /> },
+      { path: 'data', element: <Navigate to="/utilities/data" replace /> },
+      { path: 'electricity', element: <Navigate to="/utilities/electricity" replace /> },
+      { path: 'tv', element: <Navigate to="/utilities/tv" replace /> },
     ],
   },
 

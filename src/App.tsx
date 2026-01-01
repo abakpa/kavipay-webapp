@@ -6,6 +6,7 @@ import { VirtualCardProvider } from '@/contexts/VirtualCardContext';
 import { KYCProvider } from '@/contexts/KYCContext';
 import { WalletProvider } from '@/contexts/WalletContext';
 import { ReferralProvider } from '@/contexts/ReferralContext';
+import { UtilitiesProvider } from '@/contexts/UtilitiesContext';
 import { router } from '@/Router';
 import './index.css';
 
@@ -16,11 +17,13 @@ function App() {
         <SessionTimeoutProvider>
           <KYCProvider>
             <WalletProvider>
-              <ReferralProvider>
-                <VirtualCardProvider>
-                  <RouterProvider router={router} />
-                </VirtualCardProvider>
-              </ReferralProvider>
+              <UtilitiesProvider>
+                <ReferralProvider>
+                  <VirtualCardProvider>
+                    <RouterProvider router={router} />
+                  </VirtualCardProvider>
+                </ReferralProvider>
+              </UtilitiesProvider>
             </WalletProvider>
           </KYCProvider>
         </SessionTimeoutProvider>
