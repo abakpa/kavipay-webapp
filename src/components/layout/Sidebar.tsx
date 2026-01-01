@@ -12,6 +12,7 @@ import logo from '@/assets/logo.png';
 
 interface SidebarProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
 const navItems = [
@@ -23,7 +24,7 @@ const navItems = [
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -33,7 +34,7 @@ export function Sidebar({ className }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-border px-4">
-        <Link to="/dashboard">
+        <Link to="/dashboard" onClick={onNavigate}>
           <img
             src={logo}
             alt="KaviPay"
@@ -48,6 +49,7 @@ export function Sidebar({ className }: SidebarProps) {
           <NavLink
             key={to}
             to={to}
+            onClick={onNavigate}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',

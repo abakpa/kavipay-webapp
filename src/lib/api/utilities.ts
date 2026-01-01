@@ -217,3 +217,116 @@ export const submitGameWithdrawal = async (
   });
   return response.data;
 };
+
+// Electricity
+
+export const verifyMeterNumber = async (data: {
+  meterNumber: string;
+  serviceId: string;
+  serviceType: string;
+}): Promise<{
+  success: boolean;
+  data: {
+    customerName: string;
+    customerAddress: string;
+    meterNumber: string;
+  };
+}> => {
+  const response = await api.post('/utilities/verify-meter-number', data);
+  return response.data;
+};
+
+export const buyPower = async (data: {
+  meterNumber: string;
+  amountInNaira: number;
+  serviceId: string;
+  serviceType: string;
+  currency: string;
+  paymentMethod: string;
+  phoneNumber: string;
+}): Promise<{
+  success: boolean;
+  message: string;
+  transactionId?: string;
+  data?: {
+    token?: string;
+    units?: string;
+  };
+}> => {
+  const response = await api.post('/utilities/buy-power', data);
+  return response.data;
+};
+
+// TV Subscriptions
+
+export const getTvProviders = async (): Promise<{
+  success: boolean;
+  data: Array<{
+    serviceId: string;
+    name: string;
+  }>;
+}> => {
+  const response = await api.get('/utilities/tv-providers');
+  return response.data;
+};
+
+export const getTvPackages = async (
+  providerId: string
+): Promise<{
+  success: boolean;
+  data: Array<{
+    variationCode: string;
+    name: string;
+    amount: number;
+    fixedPrice: string;
+  }>;
+}> => {
+  const response = await api.get(`/utilities/tv-providers/${providerId}/bouquets`);
+  const rawData = response.data;
+
+  if (Array.isArray(rawData) && rawData.length > 0) {
+    const transformedData = rawData.map((item: { variation_code?: string; name?: string; variation_amount?: string; fixedPrice?: string }) => ({
+      variationCode: item.variation_code || '',
+      name: item.name || '',
+      amount: parseInt(item.variation_amount || '0', 10),
+      fixedPrice: item.fixedPrice || '',
+    }));
+
+    return { success: true, data: transformedData };
+  }
+
+  return { success: false, data: [] };
+};
+
+export const verifySmartCardNumber = async (data: {
+  cardNumber: string;
+  serviceId: string;
+}): Promise<{
+  success: boolean;
+  data: {
+    customerName: string;
+    cardNumber: string;
+    currentPackage: string;
+    dueDate?: string;
+  };
+}> => {
+  const response = await api.post('/utilities/verify-smart-card-number', data);
+  return response.data;
+};
+
+export const subscribeTv = async (data: {
+  cardNumber: string;
+  amountInNaira: number;
+  serviceId: string;
+  variationCode: string;
+  phoneNumber: string;
+  currency: string;
+  paymentMethod: string;
+}): Promise<{
+  success: boolean;
+  message: string;
+  transactionId?: string;
+}> => {
+  const response = await api.post('/utilities/subscribe-tv', data);
+  return response.data;
+};

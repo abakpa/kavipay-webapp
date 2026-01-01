@@ -159,10 +159,8 @@ export function CardDisplay({
     >
       {/* Card Container with 3D flip effect */}
       <div
-        className={cn(
-          'relative h-full w-full transition-transform duration-500 transform-style-3d',
-          isFlipped && 'rotate-y-180'
-        )}
+        className="relative h-full w-full transition-transform duration-500 transform-style-3d"
+        style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
         {/* Front Face */}
         <div
@@ -245,11 +243,12 @@ export function CardDisplay({
         {/* Back Face */}
         <div
           className={cn(
-            'absolute inset-0 rounded-2xl p-5 backface-hidden rotate-y-180',
+            'absolute inset-0 rounded-2xl p-5 backface-hidden',
             'bg-gradient-to-br from-slate-800 to-slate-900',
             'shadow-xl shadow-black/20',
             'overflow-hidden'
           )}
+          style={{ transform: 'rotateY(180deg)' }}
         >
           {/* Decorative patterns */}
           <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10" />
