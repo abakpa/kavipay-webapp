@@ -8,7 +8,9 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logo from '@/assets/logo.png';
+import { useTheme } from '@/contexts/ThemeContext';
+import logoLight from '@/assets/logo.png';
+import logoDark from '@/assets/kavi-logo-dark.png';
 
 interface SidebarProps {
   className?: string;
@@ -25,6 +27,9 @@ const navItems = [
 ];
 
 export function Sidebar({ className, onNavigate }: SidebarProps) {
+  const { resolvedTheme } = useTheme();
+  const logo = resolvedTheme === 'dark' ? logoDark : logoLight;
+
   return (
     <aside
       className={cn(
