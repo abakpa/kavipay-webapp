@@ -129,7 +129,7 @@ export function BVNInputModal({
         {/* Actions */}
         <div className="flex gap-3">
           <Button
-            variant="default"
+            variant="secondary"
             size="lg"
             onClick={handleClose}
             disabled={isLoading}
