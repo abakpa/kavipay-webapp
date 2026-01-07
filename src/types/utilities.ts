@@ -1,13 +1,15 @@
 // Utility Types and Interfaces
 
-export enum TransactionTypes {
-  FundTransfer = 1,
-  BuyPower = 2,
-  BuyAirtime = 3,
-  BuyData = 4,
-  TvSubscription = 5,
-  ElectricityBill = 6,
-}
+export const TransactionTypes = {
+  FundTransfer: 1,
+  BuyPower: 2,
+  BuyAirtime: 3,
+  BuyData: 4,
+  TvSubscription: 5,
+  ElectricityBill: 6,
+} as const;
+
+export type TransactionTypes = (typeof TransactionTypes)[keyof typeof TransactionTypes];
 
 export interface NetworkProvider {
   name: string;

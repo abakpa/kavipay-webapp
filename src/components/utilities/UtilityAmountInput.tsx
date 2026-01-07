@@ -22,7 +22,6 @@ export function UtilityAmountInput({
   currency = '₦',
   quickAmounts = [500, 1000, 2000, 5000],
   minAmount,
-  maxAmount,
   error,
   className,
 }: UtilityAmountInputProps) {
@@ -41,9 +40,6 @@ export function UtilityAmountInput({
   };
 
   const numericValue = parseInt(value, 10) || 0;
-  const isValid =
-    (!minAmount || numericValue >= minAmount) &&
-    (!maxAmount || numericValue <= maxAmount);
 
   return (
     <div className={cn('space-y-3', className)}>
