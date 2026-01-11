@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Bell, User, LogOut } from 'lucide-react';
+import { Menu, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggleCompact } from '@/components/ui/ThemeToggle';
+import { NotificationBell } from '@/components/notifications';
 import { cn } from '@/lib/utils';
 
 interface HeaderProps {
@@ -36,12 +37,7 @@ export function Header({ className, onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-2">
         <ThemeToggleCompact />
 
-        <button
-          className="rounded-lg p-2 hover:bg-muted"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5 text-muted-foreground" />
-        </button>
+        <NotificationBell />
 
         {/* User dropdown */}
         <div className="relative">

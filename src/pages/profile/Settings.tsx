@@ -1,8 +1,24 @@
-import { Sun, Bell, Shield, HelpCircle } from 'lucide-react';
+import { Sun, Bell, Shield, HelpCircle, Volume2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { Toggle } from '@/components/ui/Toggle';
+import { Button } from '@/components/ui/Button';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export function Settings() {
+  const {
+    preferences,
+    updatePreferences,
+    requestPushPermission,
+    getPushPermissionStatus,
+  } = useNotifications();
+
+  const pushPermission = getPushPermissionStatus();
+
+  const handleRequestPushPermission = async () => {
+    await requestPushPermission();
+  };
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -40,27 +56,159 @@ export function Settings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Master toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Email Notifications</p>
+              <p className="font-medium">Enable Notifications</p>
               <p className="text-sm text-muted-foreground">
-                Receive email updates
+                Master switch for all notifications
               </p>
             </div>
-            <button className="relative h-6 w-11 rounded-full bg-muted">
-              <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform" />
-            </button>
+            <Toggle
+              checked={preferences.enabled}
+              onChange={(checked) => updatePreferences({ enabled: checked })}
+            />
           </div>
+
+          {/* Browser push notifications */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Browser Push Notifications</p>
+              <p className="text-sm text-muted-foreground">
+                {pushPermission === 'granted'
+                  ? 'Receive notifications when app is in background'
+                  : pushPermission === 'denied'
+                  ? 'Permission denied. Enable in browser settings.'
+                  : 'Allow browser notifications'}
+              </p>
+            </div>
+            {pushPermission === 'granted' ? (
+              <Toggle
+                checked={preferences.pushEnabled}
+                onChange={(checked) => updatePreferences({ pushEnabled: checked })}
+                disabled={!preferences.enabled}
+              />
+            ) : pushPermission === 'denied' ? (
+              <span className="text-xs text-muted-foreground">Blocked</span>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRequestPushPermission}
+                disabled={!preferences.enabled}
+              >
+                Enable
+              </Button>
+            )}
+          </div>
+
+          <hr className="border-border" />
+
+          {/* Notification types */}
+          <p className="text-sm font-medium text-muted-foreground">Notification Types</p>
+
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Transaction Alerts</p>
               <p className="text-sm text-muted-foreground">
-                Get notified for transactions
+                Payments, transfers, and swaps
               </p>
             </div>
-            <button className="relative h-6 w-11 rounded-full bg-kaviBlue">
-              <span className="absolute right-1 top-1 h-4 w-4 rounded-full bg-white transition-transform" />
-            </button>
+            <Toggle
+              checked={preferences.transactionAlerts}
+              onChange={(checked) => updatePreferences({ transactionAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Security Alerts</p>
+              <p className="text-sm text-muted-foreground">
+                Login attempts and security events
+              </p>
+            </div>
+            <Toggle
+              checked={preferences.securityAlerts}
+              onChange={(checked) => updatePreferences({ securityAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Card Alerts</p>
+              <p className="text-sm text-muted-foreground">
+                Virtual card activity
+              </p>
+            </div>
+            <Toggle
+              checked={preferences.cardAlerts}
+              onChange={(checked) => updatePreferences({ cardAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Utility Alerts</p>
+              <p className="text-sm text-muted-foreground">
+                Bill payments and subscriptions
+              </p>
+            </div>
+            <Toggle
+              checked={preferences.utilityAlerts}
+              onChange={(checked) => updatePreferences({ utilityAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Wallet Alerts</p>
+              <p className="text-sm text-muted-foreground">
+                Wallet activity and updates
+              </p>
+            </div>
+            <Toggle
+              checked={preferences.walletAlerts}
+              onChange={(checked) => updatePreferences({ walletAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Marketing Notifications</p>
+              <p className="text-sm text-muted-foreground">
+                Promotions and new features
+              </p>
+            </div>
+            <Toggle
+              checked={preferences.marketingAlerts}
+              onChange={(checked) => updatePreferences({ marketingAlerts: checked })}
+              disabled={!preferences.enabled}
+            />
+          </div>
+
+          <hr className="border-border" />
+
+          {/* Sound */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Notification Sound</p>
+                <p className="text-sm text-muted-foreground">
+                  Play sound for new notifications
+                </p>
+              </div>
+            </div>
+            <Toggle
+              checked={preferences.sound}
+              onChange={(checked) => updatePreferences({ sound: checked })}
+              disabled={!preferences.enabled}
+            />
           </div>
         </CardContent>
       </Card>
