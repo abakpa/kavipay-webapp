@@ -34,6 +34,9 @@ import { Referral } from '@/pages/referral/Referral';
 import { Profile } from '@/pages/profile/Profile';
 import { Settings } from '@/pages/profile/Settings';
 
+// Notifications
+import { Notifications } from '@/pages/Notifications';
+
 // Utilities
 import { UtilitiesHome, Airtime, Data, Electricity, TV, UtilityResult } from '@/pages/utilities';
 
@@ -85,6 +88,9 @@ export const router = createBrowserRouter([
       // Profile & Settings
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
+
+      // Notifications
+      { path: 'notifications', element: <Notifications /> },
 
       // Utilities
       { path: 'utilities', element: <UtilitiesHome /> },
