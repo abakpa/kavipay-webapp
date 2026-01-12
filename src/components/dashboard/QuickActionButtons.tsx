@@ -16,21 +16,22 @@ interface ActionButtonProps {
 }
 
 function ActionButton({ icon, label, onClick, variant }: ActionButtonProps) {
+  // Solid colored buttons with white text/icons (matching mobile app)
   const variantStyles = {
-    primary: 'bg-kaviBlue/10 text-kaviBlue hover:bg-kaviBlue/20',
-    warning: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
-    success: 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20',
+    primary: 'bg-kaviBlue hover:bg-kaviBlue/90 text-white',
+    warning: 'bg-amber-500 hover:bg-amber-500/90 text-white',
+    success: 'bg-emerald-500 hover:bg-emerald-500/90 text-white',
   };
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        'flex flex-1 flex-col items-center gap-2 rounded-xl p-4 transition-all active:scale-95',
+        'flex flex-1 flex-col items-center gap-2 rounded-xl p-4 transition-all active:scale-95 shadow-md',
         variantStyles[variant]
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-current/10">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
         {icon}
       </div>
       <span className="text-sm font-medium">{label}</span>
