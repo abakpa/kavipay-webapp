@@ -10,25 +10,33 @@
   --color-rainBlue: #4DA6FF;
   --color-rainGray: #1E293B;
 
-  /* Elevated card background */
+  /* Elevated card backgrounds */
   --color-kaviCard: #151B2E;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #fafafa;
+  --color-surface-3: #f5f5f5;
 
-  /* Theme colors for light mode */
+  /* Status colors */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-info: #4DA6FF;
+
+  /* Theme colors for light mode (matching mobile app) */
   --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-foreground: #020817;
   --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
+  --color-card-foreground: #020817;
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
   --color-border: #e2e8f0;
   --color-primary: #4DA6FF;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #94a3b8;
-  --color-secondary-foreground: #0f172a;
+  --color-secondary: #1E293B;
+  --color-secondary-foreground: #94A3B8;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-accent: #F59E0B;
-  --color-accent-foreground: #ffffff;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #020817;
   --color-input: #e2e8f0;
   --color-ring: #4DA6FF;
 
@@ -41,21 +49,28 @@
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Dark mode overrides */
+/* Dark mode overrides (matching mobile app) */
 .dark {
   --color-background: #0A0F1C;
   --color-foreground: #ffffff;
   --color-card: #151B2E;
   --color-card-foreground: #ffffff;
   --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
+  --color-muted-foreground: #64748b;
   --color-border: #1e293b;
   --color-primary: #4DA6FF;
   --color-primary-foreground: #ffffff;
   --color-secondary: #64748b;
-  --color-secondary-foreground: #ffffff;
-  --color-input: #1e293b;
+  --color-secondary-foreground: #94A3B8;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #ffffff;
+  --color-accent: #1e293b;
+  --color-accent-foreground: #ffffff;
+  --color-input: #1a2333;
   --color-ring: #4DA6FF;
+  --color-surface-1: #0A0F1C;
+  --color-surface-2: #151B2E;
+  --color-surface-3: #1A2333;
 }
 
 /* Base styles */
@@ -76,6 +91,43 @@
   /* Focus visible styles */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Component-specific styles */
+@layer components {
+  .total-value-card {
+    background-color: #FFFFFF !important;
+  }
+
+  .total-value-card .balance-label,
+  .total-value-card .currency-label {
+    color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .total-value-card .balance-amount {
+    color: #000000 !important;
+  }
+
+  .total-value-card .balance-hidden {
+    color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .total-value-card {
+    background-color: #1e293b !important;
+  }
+
+  .dark .total-value-card .balance-label,
+  .dark .total-value-card .currency-label {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .dark .total-value-card .balance-amount {
+    color: #ffffff !important;
+  }
+
+  .dark .total-value-card .balance-hidden {
+    color: rgba(255, 255, 255, 0.3) !important;
   }
 }
 
