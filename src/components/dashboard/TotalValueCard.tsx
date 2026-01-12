@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Wallet } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TotalValueCardProps {
@@ -31,46 +31,53 @@ export function TotalValueCard({ balance, currency = 'USD', className }: TotalVa
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl bg-gradient-to-br from-kaviBlue to-kaviBlue/80 p-6 text-white',
+        'total-value-card relative overflow-hidden rounded-2xl p-6 min-h-[175px]',
+        'shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
+        'dark:shadow-[0_4px_12px_rgba(77,166,255,0.15)]',
         className
       )}
     >
-      {/* Decorative circles */}
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-      <div className="absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-white/5" />
-      <div className="absolute right-12 top-12 h-16 w-16 rounded-full bg-white/5" />
+      {/* Decorative circles (matching mobile) */}
+      <div className="absolute -top-[100px] -right-[100px] w-[240px] h-[240px] rounded-full bg-blue-500/[0.03] dark:bg-blue-500/[0.05]" />
+      <div className="absolute -bottom-[80px] -left-[80px] w-[180px] h-[180px] rounded-full bg-indigo-500/[0.025] dark:bg-indigo-500/[0.04]" />
+      <div className="absolute top-[20px] -left-[60px] w-[120px] h-[120px] rounded-full bg-kaviBlue/[0.02] dark:bg-kaviBlue/[0.03]" />
 
       {/* Content */}
       <div className="relative z-10">
+        {/* Header */}
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <Wallet className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-white/80">Available Balance</span>
-          </div>
+          <span className="balance-label text-[13px] font-medium tracking-wide">
+            Available Balance
+          </span>
           <button
             onClick={() => setIsBalanceVisible(!isBalanceVisible)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+            className="flex h-[42px] w-[42px] items-center justify-center rounded-xl bg-kaviBlue/[0.08] dark:bg-kaviBlue/10 text-kaviBlue transition-colors hover:bg-kaviBlue/15"
           >
             {isBalanceVisible ? (
-              <EyeOff className="h-4 w-4" />
+              <Eye className="h-5 w-5" strokeWidth={1.5} />
             ) : (
-              <Eye className="h-4 w-4" />
+              <EyeOff className="h-5 w-5" strokeWidth={1.5} />
             )}
           </button>
         </div>
 
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-semibold">{getCurrencySymbol(currency)}</span>
-          <span className="text-4xl font-bold tracking-tight">
-            {isBalanceVisible ? formatBalance(balance) : '••••••'}
-          </span>
+        {/* Balance Display */}
+        <div className="flex items-baseline">
+          {isBalanceVisible ? (
+            <>
+              <span className="currency-label text-xl font-medium mr-1">
+                {currency}
+              </span>
+              <span className="balance-amount text-[44px] font-bold tracking-tight leading-tight dark:drop-shadow-[0_2px_8px_rgba(77,166,255,0.15)]">
+                {getCurrencySymbol(currency)}{formatBalance(balance)}
+              </span>
+            </>
+          ) : (
+            <span className="balance-hidden text-[44px] font-bold tracking-[8px]">
+              • • • •
+            </span>
+          )}
         </div>
-
-        <p className="mt-2 text-sm text-white/60">
-          {currency} Wallet
-        </p>
       </div>
     </div>
   );
