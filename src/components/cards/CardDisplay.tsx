@@ -152,24 +152,30 @@ export function CardDisplay({
   return (
     <div
       className={cn(
-        'relative h-[220px] w-full max-w-[400px] cursor-pointer perspective-1000',
+        'relative h-[240px] w-full max-w-[400px] cursor-pointer',
         className
       )}
+      style={{ perspective: '1000px' }}
       onClick={onFlip}
     >
       {/* Card Container with 3D flip effect */}
       <div
-        className="relative h-full w-full transition-transform duration-500 transform-style-3d"
-        style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+        className="relative h-full w-full transition-transform duration-500 rounded-2xl"
+        style={{
+          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          transformStyle: 'preserve-3d',
+          WebkitTransformStyle: 'preserve-3d'
+        }}
       >
         {/* Front Face */}
         <div
           className={cn(
-            'absolute inset-0 rounded-2xl p-5 backface-hidden',
+            'absolute inset-0 rounded-2xl p-5',
             'bg-gradient-to-br from-slate-800 to-slate-900',
             'shadow-xl shadow-black/20',
             'overflow-hidden'
           )}
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
           {/* Decorative patterns */}
           <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10" />
@@ -241,12 +247,16 @@ export function CardDisplay({
         {/* Back Face */}
         <div
           className={cn(
-            'absolute inset-0 rounded-2xl p-5 backface-hidden',
+            'absolute inset-0 rounded-2xl p-5',
             'bg-gradient-to-br from-slate-800 to-slate-900',
             'shadow-xl shadow-black/20',
             'overflow-hidden'
           )}
-          style={{ transform: 'rotateY(180deg)' }}
+          style={{
+            transform: 'rotateY(180deg)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
         >
           {/* Decorative patterns */}
           <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10" />
@@ -273,7 +283,7 @@ export function CardDisplay({
           </div>
 
           {/* Card Details */}
-          <div className="relative z-10 mt-6 space-y-4">
+          <div className="relative z-10 mt-4 space-y-3">
             {/* Card Number */}
             <div>
               <div className="flex items-center gap-2">
@@ -371,8 +381,11 @@ export function CardDisplay({
             </div>
 
             {/* Cardholder */}
-            <div className="pt-2">
-              <span className="block text-sm font-bold uppercase tracking-wider text-white">
+            <div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Cardholder
+              </span>
+              <span className="mt-0.5 block text-sm font-bold uppercase tracking-wider text-white">
                 {card.cardholderName}
               </span>
             </div>
