@@ -12,3 +12,4 @@ export { BillingAddressModal } from './BillingAddressModal';
 export { DeleteCardModal } from './DeleteCardModal';
 export { BVNInputModal } from './BVNInputModal';
 export { SudoSecureDataView } from './SudoSecureDataView';
+export { SpendingAnalytics } from './SpendingAnalytics';

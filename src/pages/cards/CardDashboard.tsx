@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { CardList, BVNInputModal } from '@/components/cards';
+import { CardList, BVNInputModal, SpendingAnalytics } from '@/components/cards';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -313,6 +313,14 @@ export function CardDashboard() {
                 <span className="text-xs">Settings</span>
               </Button>
             </div>
+          )}
+
+          {/* Spending Analytics */}
+          {selectedCard && (
+            <SpendingAnalytics
+              transactions={selectedCardTransactions}
+              className="mt-4"
+            />
           )}
         </div>
 
