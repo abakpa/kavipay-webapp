@@ -4,7 +4,6 @@ import {
   Calendar,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   ArrowUp,
   ArrowDown,
   Minus,
@@ -22,20 +21,20 @@ export function SpendingAnalytics({ transactions, className }: SpendingAnalytics
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null);
 
   // Generate monthly spending data from transactions
-  const { labels, data, monthlyData } = useMemo(() => {
+  const { labels, data } = useMemo(() => {
     if (!transactions.length) {
-      return { labels: [], data: [], monthlyData: {} as Record<string, number> };
+      return { labels: [] as string[], data: [] as number[] };
     }
 
     // Filter for spending transactions (purchases, fees, settlements)
-    const spendTypes = new Set([
+    const spendTypes: string[] = [
       CardTransactionType.PURCHASE,
       CardTransactionType.FEE,
       CardTransactionType.WITHDRAWAL,
-    ]);
+    ];
 
     const spendingTransactions = transactions.filter(
-      (tx) => tx.type && spendTypes.has(tx.type) && tx.amount < 0
+      (tx) => tx.type && spendTypes.includes(tx.type) && tx.amount < 0
     );
 
     const now = new Date();
@@ -80,7 +79,7 @@ export function SpendingAnalytics({ transactions, className }: SpendingAnalytics
     const sortedKeys = Object.keys(monthlyDataMap).sort();
     const finalData = sortedKeys.map(key => monthlyDataMap[key]);
 
-    return { labels: monthNames, data: finalData, monthlyData: monthlyDataMap };
+    return { labels: monthNames, data: finalData };
   }, [transactions]);
 
   // Calculate statistics
