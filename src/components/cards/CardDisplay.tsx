@@ -190,9 +190,7 @@ export function CardDisplay({
 
           {/* Card Chip */}
           <div className="relative z-10 mt-4">
-            <div className="h-9 w-12 rounded-md bg-amber-500/90 border border-amber-600/30">
-              <div className="absolute inset-1 rounded border border-black/20" />
-            </div>
+            <div className="h-9 w-12 rounded-md bg-amber-500/90 border border-amber-600/30" />
           </div>
 
           {/* Balance Section */}
