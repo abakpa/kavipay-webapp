@@ -3,17 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   RefreshCw,
-  Snowflake,
-  Play,
   ArrowUpRight,
   ArrowDownLeft,
-  Settings,
   Receipt,
   AlertCircle,
 } from 'lucide-react';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { CardList, BVNInputModal, SpendingAnalytics } from '@/components/cards';
+import { CardList, BVNInputModal, SpendingAnalytics, CardActions } from '@/components/cards';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -45,6 +42,7 @@ export function CardDashboard() {
   const [isProcessingPreOrder, setIsProcessingPreOrder] = useState(false);
   const [showBvnModal, setShowBvnModal] = useState(false);
   const [pendingPreOrderId, setPendingPreOrderId] = useState<string | null>(null);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
 
   // Check if user is Nigerian (requires BVN for card creation)
   const isNigerian = user?.kyc_country?.code?.toUpperCase() === 'NG';
@@ -151,16 +149,14 @@ export function CardDashboard() {
     }
   };
 
-  const handleWithdraw = () => {
-    if (selectedCard) {
-      navigate(`/cards/${selectedCard.id}/withdraw`);
-    }
-  };
-
   const handleSettings = () => {
     if (selectedCard) {
       navigate(`/cards/${selectedCard.id}/settings`);
     }
+  };
+
+  const handleToggleCardView = () => {
+    setIsCardFlipped(!isCardFlipped);
   };
 
   const handleViewTransactions = () => {
@@ -180,12 +176,6 @@ export function CardDashboard() {
   const selectedCardTransactions = selectedCard
     ? transactions[selectedCard.id] || []
     : [];
-
-  const isFrozen =
-    selectedCard?.status === CardStatus.FROZEN ||
-    selectedCard?.status === CardStatus.INACTIVE;
-
-  const isCardActive = selectedCard?.status === CardStatus.ACTIVE;
 
   return (
     <div className="space-y-6">
@@ -250,69 +240,17 @@ export function CardDashboard() {
             onCreateCard={handleCreateCard}
           />
 
-          {/* Quick Actions */}
+          {/* Card Actions */}
           {selectedCard && (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Button
-                variant="outline"
-                className="flex-col gap-1 py-4"
-                onClick={handleTopup}
-                disabled={!isCardActive}
-              >
-                <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
-                <span className="text-xs">Top Up</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-col gap-1 py-4"
-                onClick={handleWithdraw}
-                disabled={!isCardActive}
-              >
-                <ArrowUpRight className="h-5 w-5 text-orange-500" />
-                <span className="text-xs">Withdraw</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-col gap-1 py-4"
-                onClick={handleFreezeUnfreeze}
-                disabled={
-                  actionLoading !== null ||
-                  selectedCard.status === CardStatus.BLOCKED ||
-                  selectedCard.status === CardStatus.EXPIRED ||
-                  selectedCard.status === CardStatus.TERMINATED
-                }
-              >
-                {isFrozen ? (
-                  <>
-                    <Play
-                      className={cn(
-                        'h-5 w-5 text-emerald-500',
-                        actionLoading === 'unfreeze' && 'animate-pulse'
-                      )}
-                    />
-                    <span className="text-xs">Unfreeze</span>
-                  </>
-                ) : (
-                  <>
-                    <Snowflake
-                      className={cn(
-                        'h-5 w-5 text-blue-500',
-                        actionLoading === 'freeze' && 'animate-pulse'
-                      )}
-                    />
-                    <span className="text-xs">Freeze</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-col gap-1 py-4"
-                onClick={handleSettings}
-              >
-                <Settings className="h-5 w-5 text-muted-foreground" />
-                <span className="text-xs">Settings</span>
-              </Button>
-            </div>
+            <CardActions
+              card={selectedCard}
+              isCardFlipped={isCardFlipped}
+              isFreezingCard={actionLoading === 'freeze' || actionLoading === 'unfreeze'}
+              onToggleCardView={handleToggleCardView}
+              onFreezeCard={handleFreezeUnfreeze}
+              onNavigateToSettings={handleSettings}
+              onNavigateToTopup={handleTopup}
+            />
           )}
 
           {/* Spending Analytics */}
