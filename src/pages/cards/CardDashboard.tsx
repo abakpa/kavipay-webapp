@@ -42,6 +42,7 @@ export function CardDashboard() {
   const [isProcessingPreOrder, setIsProcessingPreOrder] = useState(false);
   const [showBvnModal, setShowBvnModal] = useState(false);
   const [pendingPreOrderId, setPendingPreOrderId] = useState<string | null>(null);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
 
   // Check if user is Nigerian (requires BVN for card creation)
   const isNigerian = user?.kyc_country?.code?.toUpperCase() === 'NG';
@@ -154,6 +155,10 @@ export function CardDashboard() {
     }
   };
 
+  const handleToggleCardView = () => {
+    setIsCardFlipped(!isCardFlipped);
+  };
+
   const handleViewTransactions = () => {
     if (selectedCard) {
       navigate(`/cards/${selectedCard.id}/transactions`);
@@ -239,9 +244,9 @@ export function CardDashboard() {
           {selectedCard && (
             <CardActions
               card={selectedCard}
-              isCardFlipped={false}
+              isCardFlipped={isCardFlipped}
               isFreezingCard={actionLoading === 'freeze' || actionLoading === 'unfreeze'}
-              onToggleCardView={() => {}}
+              onToggleCardView={handleToggleCardView}
               onFreezeCard={handleFreezeUnfreeze}
               onNavigateToSettings={handleSettings}
               onNavigateToTopup={handleTopup}
