@@ -566,7 +566,7 @@ export function CardCreationForm({
         <div className="flex items-start gap-3">
           <Info className="h-5 w-5 flex-shrink-0 text-kaviBlue" />
           <p className="text-sm text-muted-foreground">
-            A one-time card creation fee of $30 will be charged. Your card will be
+            A one-time card creation fee of $50 will be charged. Your card will be
             ready to use immediately after successful payment.
           </p>
         </div>
