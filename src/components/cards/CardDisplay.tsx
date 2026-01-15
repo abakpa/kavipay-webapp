@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Copy, Snowflake, ShieldOff, Clock, CalendarX, Eye, EyeOff } from 'lucide-react';
+import { Copy, Snowflake, ShieldOff, Clock, CalendarX, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SudoSecureDataView } from './SudoSecureDataView';
 import type { VirtualCard } from '@/types/card';
@@ -12,6 +12,8 @@ interface CardDisplayProps {
   showSensitiveData?: boolean;
   /** Card token for Sudo cards (used with Secure Proxy) */
   cardToken?: string;
+  /** Show loading state on back face while fetching card details */
+  isLoadingDetails?: boolean;
   className?: string;
 }
 
@@ -120,6 +122,7 @@ export function CardDisplay({
   onFlip,
   showSensitiveData = false,
   cardToken,
+  isLoadingDetails = false,
   className,
 }: CardDisplayProps) {
   const [copied, setCopied] = useState<string | null>(null);
@@ -158,6 +161,9 @@ export function CardDisplay({
       style={{ perspective: '1000px' }}
       onClick={onFlip}
     >
+      {/* Static background layer - doesn't rotate */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900" />
+
       {/* Card Container with 3D flip effect */}
       <div
         className="relative h-full w-full transition-transform duration-500 rounded-2xl"
@@ -281,6 +287,16 @@ export function CardDisplay({
               )}
             </button>
           </div>
+
+          {/* Loading State on Back Face */}
+          {isLoadingDetails && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+              <span className="mt-3 text-sm font-medium text-slate-300">
+                Loading card details...
+              </span>
+            </div>
+          )}
 
           {/* Card Details */}
           <div className="relative z-10 mt-4 space-y-3">
