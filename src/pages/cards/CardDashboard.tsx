@@ -168,8 +168,19 @@ export function CardDashboard() {
   // Load transactions when card is selected
   const handleSelectCard = async (card: typeof selectedCard) => {
     if (card) {
+      // Set the active card first
       selectCard(card);
-      await loadTransactions(card.id);
+
+      // Small delay to ensure state update propagates (like mobile app)
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Load transactions for the new card - errors are handled gracefully in context
+      try {
+        await loadTransactions(card.id);
+      } catch (error) {
+        // Error is already handled in context, just log here
+        console.warn('Failed to load transactions:', error);
+      }
     }
   };
 
