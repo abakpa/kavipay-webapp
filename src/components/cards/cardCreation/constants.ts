@@ -6,7 +6,7 @@ import {
 } from '@/types/card';
 
 // Card creation fee in USD
-export const CARD_CREATION_FEE = 30;
+export const CARD_CREATION_FEE = 50;
 
 // Minimum and maximum initial balance
 export const MIN_INITIAL_BALANCE = 1;
