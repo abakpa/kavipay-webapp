@@ -411,10 +411,11 @@ export function VirtualCardProvider({ children }: VirtualCardProviderProps) {
         const transactions = await cardApi.getCardTransactions(cardId, options);
         dispatch({ type: 'SET_TRANSACTIONS', payload: { cardId, transactions } });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to load transactions';
-        dispatch({ type: 'SET_ERROR', payload: message });
-        throw error;
+        // Log the error but don't throw - continue with empty transactions
+        console.warn('Failed to load transactions for card:', cardId, error);
+        // Set empty transactions for this card so UI doesn't break
+        dispatch({ type: 'SET_TRANSACTIONS', payload: { cardId, transactions: [] } });
+        // Don't set error state to avoid blocking UI - just silently fail
       } finally {
         dispatch({ type: 'SET_LOADING_TRANSACTIONS', payload: false });
       }
