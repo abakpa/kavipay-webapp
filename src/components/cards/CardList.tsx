@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, CreditCard, Check, Snowflake, Play, Loader2 } from 'lucide-react';
+import { ChevronDown, CreditCard, Check, Snowflake, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CardDisplay } from './CardDisplay';
 import { CardEmptyState } from './CardEmptyState';
@@ -116,8 +116,8 @@ export function CardList({
   const [isFlipped, setIsFlipped] = useState(false);
   const [showSensitiveData, setShowSensitiveData] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [isRevealingCard, setIsRevealingCard] = useState(false);
   const [cardToken, setCardToken] = useState<string | null>(null);
+  const [isRevealingCard, setIsRevealingCard] = useState(false);
 
   const handleFlip = async () => {
     if (!isFlipped && selectedCard) {
@@ -148,6 +148,7 @@ export function CardList({
       setIsFlipped(false);
       setShowSensitiveData(false);
       setCardToken(null);
+      setIsRevealingCard(false);
     }
   };
 
@@ -157,6 +158,7 @@ export function CardList({
     setIsFlipped(false);
     setShowSensitiveData(false);
     setCardToken(null);
+    setIsRevealingCard(false);
   };
 
   // Empty state
@@ -266,23 +268,15 @@ export function CardList({
 
       {/* Card Display */}
       {selectedCard && (
-        <div className="relative flex justify-center">
+        <div className="relative flex justify-center rounded-2xl">
           <CardDisplay
             card={selectedCard}
             isFlipped={isFlipped}
             onFlip={handleFlip}
             showSensitiveData={showSensitiveData}
             cardToken={cardToken || undefined}
+            isLoadingDetails={isRevealingCard}
           />
-          {/* Loading overlay when revealing card details */}
-          {isRevealingCard && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/80">
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-kaviBlue" />
-                <span className="text-sm text-white">Loading card details...</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
