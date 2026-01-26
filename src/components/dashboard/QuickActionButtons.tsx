@@ -27,14 +27,20 @@ function ActionButton({ icon, label, onClick, variant }: ActionButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'flex flex-1 flex-col items-center gap-2 rounded-xl p-4 transition-all active:scale-95 shadow-md',
+        // Base styles
+        'flex flex-1 items-center justify-center gap-2 rounded-lg transition-all active:scale-95',
+        // Mobile: horizontal compact layout (like mobile app)
+        'flex-row py-3 px-3',
+        // Desktop: vertical layout with more padding
+        'sm:flex-col sm:gap-2 sm:rounded-xl sm:p-4 sm:shadow-md',
         variantStyles[variant]
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+      {/* Icon - simple on mobile, with background on desktop */}
+      <div className="flex items-center justify-center sm:h-12 sm:w-12 sm:rounded-full sm:bg-white/20">
         {icon}
       </div>
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-semibold sm:font-medium">{label}</span>
     </button>
   );
 }
@@ -48,19 +54,19 @@ export function QuickActionButtons({
   return (
     <div className={cn('flex gap-3', className)}>
       <ActionButton
-        icon={<ArrowDownToLine className="h-5 w-5" />}
+        icon={<ArrowDownToLine className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
         label="Deposit"
         onClick={onDeposit}
         variant="primary"
       />
       <ActionButton
-        icon={<Send className="h-5 w-5" />}
+        icon={<Send className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
         label="Send"
         onClick={onSend}
         variant="warning"
       />
       <ActionButton
-        icon={<Gift className="h-5 w-5" />}
+        icon={<Gift className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
         label="Earn"
         onClick={onEarn}
         variant="success"
