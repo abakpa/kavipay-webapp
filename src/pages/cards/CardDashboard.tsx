@@ -209,7 +209,16 @@ export function CardDashboard() {
             <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
             Refresh
           </Button>
-          <Button size="sm" onClick={handleCreateCard} className="gap-2">
+{/* Mobile: Icon-only circular button like mobile app */}
+          <button
+            onClick={handleCreateCard}
+            className="sm:hidden p-2 rounded-full bg-primary/15 hover:bg-primary/25 transition-colors"
+            aria-label="New Card"
+          >
+            <Plus className="h-6 w-6 text-primary" />
+          </button>
+          {/* Desktop: Full button with text */}
+          <Button size="sm" onClick={handleCreateCard} className="hidden sm:flex gap-2">
             <Plus className="h-4 w-4" />
             New Card
           </Button>
