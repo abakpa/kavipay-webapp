@@ -3,9 +3,8 @@ import { ChevronDown, CreditCard, Check, Snowflake, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CardDisplay } from './CardDisplay';
 import { CardEmptyState } from './CardEmptyState';
-import { generateCardToken } from '@/lib/api/cards';
 import type { VirtualCard, CardPreOrder } from '@/types/card';
-import { CardStatus, CardProvider } from '@/types/card';
+import { CardStatus } from '@/types/card';
 
 interface CardListProps {
   cards: VirtualCard[];
@@ -17,6 +16,12 @@ interface CardListProps {
   onProcessCard?: (preOrderId: string, bvn?: string) => Promise<void>;
   onCreateCard?: () => void;
   className?: string;
+  // External visibility control
+  isFlipped?: boolean;
+  onFlip?: () => void;
+  showSensitiveData?: boolean;
+  cardToken?: string | null;
+  isRevealingCard?: boolean;
 }
 
 // Helper functions
@@ -112,53 +117,22 @@ export function CardList({
   onProcessCard,
   onCreateCard,
   className,
+  // External visibility control
+  isFlipped = false,
+  onFlip,
+  showSensitiveData = false,
+  cardToken = null,
+  isRevealingCard = false,
 }: CardListProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [showSensitiveData, setShowSensitiveData] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [cardToken, setCardToken] = useState<string | null>(null);
-  const [isRevealingCard, setIsRevealingCard] = useState(false);
 
-  const handleFlip = async () => {
-    if (!isFlipped && selectedCard) {
-      // Flipping to back - fetch card token for Sudo Secure Proxy
-      setIsFlipped(true);
-      setIsRevealingCard(true);
-      try {
-        // Check if this is a Sudo card - need to fetch secure token
-        const isSudoCard = selectedCard.provider === CardProvider.SUDO;
-
-        if (isSudoCard) {
-          console.log('[CardList] Fetching card token for Sudo card:', selectedCard.id);
-          const token = await generateCardToken(selectedCard.id);
-          console.log('[CardList] Card token received:', token ? 'yes' : 'no');
-          setCardToken(token);
-        }
-
-        setShowSensitiveData(true);
-      } catch (error) {
-        console.error('[CardList] Failed to get card token:', error);
-        // Still show the back but sensitive data will show placeholder
-        setShowSensitiveData(false);
-      } finally {
-        setIsRevealingCard(false);
-      }
-    } else {
-      // Flipping to front - hide sensitive data
-      setIsFlipped(false);
-      setShowSensitiveData(false);
-      setCardToken(null);
-      setIsRevealingCard(false);
-    }
+  const handleFlip = () => {
+    onFlip?.();
   };
 
   const handleSelectCard = (card: VirtualCard) => {
     onSelectCard(card);
     setSelectorOpen(false);
-    setIsFlipped(false);
-    setShowSensitiveData(false);
-    setCardToken(null);
-    setIsRevealingCard(false);
   };
 
   // Empty state
