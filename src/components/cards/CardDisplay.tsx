@@ -161,9 +161,6 @@ export function CardDisplay({
       style={{ perspective: '1000px' }}
       onClick={onFlip}
     >
-      {/* Static background layer - doesn't rotate */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900" />
-
       {/* Card Container with 3D flip effect */}
       <div
         className="relative h-full w-full transition-transform duration-500 rounded-2xl"
@@ -175,12 +172,7 @@ export function CardDisplay({
       >
         {/* Front Face */}
         <div
-          className={cn(
-            'absolute inset-0 rounded-2xl p-5',
-            'bg-gradient-to-br from-slate-800 to-slate-900',
-            'shadow-xl shadow-black/20',
-            'overflow-hidden'
-          )}
+          className="virtual-card-face absolute inset-0 rounded-2xl p-5 overflow-hidden"
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
           {/* Decorative patterns */}
@@ -190,12 +182,12 @@ export function CardDisplay({
           {/* Header */}
           <div className="relative z-10 flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20">
-                <span className="text-xs font-bold text-white">K</span>
+              <div className="card-logo-icon flex h-8 w-8 items-center justify-center rounded-lg">
+                <span className="card-logo-text text-xs font-bold">K</span>
               </div>
-              <span className="text-base font-bold text-slate-200">KaviPay</span>
+              <span className="card-logo-text text-base font-bold">KaviPay</span>
             </div>
-            <span className="text-lg font-bold uppercase tracking-wider text-slate-200">
+            <span className="card-brand text-lg font-bold uppercase tracking-wider">
               {(card.brand || 'CARD').toUpperCase()}
             </span>
           </div>
@@ -207,10 +199,10 @@ export function CardDisplay({
 
           {/* Balance Section */}
           <div className="relative z-10 mt-4 flex flex-1 flex-col items-center justify-center">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="card-balance-label text-[11px] font-semibold uppercase tracking-wider">
               Available Balance
             </span>
-            <span className="mt-1 text-3xl font-bold text-white">
+            <span className="card-balance-amount mt-1 text-3xl font-bold">
               {getCurrencySymbol(card.currency)}
               {card.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
@@ -218,17 +210,17 @@ export function CardDisplay({
 
           {/* Footer */}
           <div className="relative z-10 mt-auto flex items-end justify-between">
-            <span className="font-mono text-lg tracking-widest text-slate-300">
+            <span className="card-last-four font-mono text-lg tracking-widest">
               •••• {lastFourDigits}
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="card-type-text text-[10px] font-semibold uppercase tracking-wider">
               {cardTypeText}
             </span>
           </div>
 
           {/* Status Overlay */}
           {statusOverlay && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-slate-900/95">
+            <div className="virtual-card-status-overlay absolute inset-0 z-20 flex items-center justify-center rounded-2xl">
               <div
                 className={cn(
                   'flex flex-col items-center rounded-xl border-2 px-8 py-4',
@@ -236,13 +228,13 @@ export function CardDisplay({
                   statusOverlay.borderClass
                 )}
               >
-                <div className="mb-2 rounded-full bg-white/10 p-2">
+                <div className="mb-2 rounded-full bg-black/5 p-2">
                   {statusOverlay.icon}
                 </div>
-                <span className="text-lg font-extrabold uppercase tracking-wider text-white">
+                <span className="status-text text-lg font-extrabold uppercase tracking-wider">
                   {statusOverlay.text}
                 </span>
-                <span className="mt-1 text-sm font-medium text-white/90">
+                <span className="status-subtext mt-1 text-sm font-medium">
                   {statusOverlay.subtext}
                 </span>
               </div>
@@ -252,12 +244,7 @@ export function CardDisplay({
 
         {/* Back Face */}
         <div
-          className={cn(
-            'absolute inset-0 rounded-2xl p-5',
-            'bg-gradient-to-br from-slate-800 to-slate-900',
-            'shadow-xl shadow-black/20',
-            'overflow-hidden'
-          )}
+          className="virtual-card-face absolute inset-0 rounded-2xl p-5 overflow-hidden"
           style={{
             transform: 'rotateY(180deg)',
             backfaceVisibility: 'hidden',
@@ -270,7 +257,7 @@ export function CardDisplay({
 
           {/* Header */}
           <div className="relative z-10 flex items-center justify-between">
-            <span className="text-lg font-bold uppercase tracking-wider text-slate-200">
+            <span className="card-brand text-lg font-bold uppercase tracking-wider">
               {(card.brand || 'CARD').toUpperCase()}
             </span>
             <button
@@ -278,21 +265,21 @@ export function CardDisplay({
                 e.stopPropagation();
                 onFlip?.();
               }}
-              className="rounded-lg bg-blue-500/20 p-2 transition-colors hover:bg-blue-500/30"
+              className="card-logo-icon rounded-lg p-2 transition-colors"
             >
               {showSensitiveData ? (
-                <EyeOff className="h-4 w-4 text-slate-300" />
+                <EyeOff className="h-4 w-4 card-copy-btn" />
               ) : (
-                <Eye className="h-4 w-4 text-slate-300" />
+                <Eye className="h-4 w-4 card-copy-btn" />
               )}
             </button>
           </div>
 
           {/* Loading State on Back Face */}
           {isLoadingDetails && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
-              <span className="mt-3 text-sm font-medium text-slate-300">
+            <div className="virtual-card-face absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <span className="card-detail-label mt-3 text-sm font-medium">
                 Loading card details...
               </span>
             </div>
@@ -303,7 +290,7 @@ export function CardDisplay({
             {/* Card Number */}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                   Card Number
                 </span>
                 {!useSecureProxy && (
@@ -312,13 +299,13 @@ export function CardDisplay({
                       e.stopPropagation();
                       copyToClipboard(card.cardNumber, 'number');
                     }}
-                    className="rounded p-1 transition-colors hover:bg-white/10"
+                    className="card-copy-btn rounded p-1 transition-colors"
                   >
-                    <Copy className="h-3.5 w-3.5 text-slate-400" />
+                    <Copy className="h-3.5 w-3.5" />
                   </button>
                 )}
                 {copied === 'number' && (
-                  <span className="text-xs text-emerald-400">Copied!</span>
+                  <span className="text-xs text-emerald-500">Copied!</span>
                 )}
               </div>
               {useSecureProxy ? (
@@ -330,7 +317,7 @@ export function CardDisplay({
                   className="mt-1"
                 />
               ) : (
-                <span className="mt-1 block font-mono text-base font-semibold tracking-wider text-white">
+                <span className="card-detail-value mt-1 block font-mono text-base font-semibold tracking-wider">
                   {formatCardNumber(card.cardNumber)}
                 </span>
               )}
@@ -340,7 +327,7 @@ export function CardDisplay({
             <div className="flex gap-8">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                     Valid Thru
                   </span>
                   <button
@@ -348,21 +335,21 @@ export function CardDisplay({
                       e.stopPropagation();
                       copyToClipboard(card.expiryDate, 'expiry');
                     }}
-                    className="rounded p-1 transition-colors hover:bg-white/10"
+                    className="card-copy-btn rounded p-1 transition-colors"
                   >
-                    <Copy className="h-3 w-3 text-slate-400" />
+                    <Copy className="h-3 w-3" />
                   </button>
                   {copied === 'expiry' && (
-                    <span className="text-xs text-emerald-400">Copied!</span>
+                    <span className="text-xs text-emerald-500">Copied!</span>
                   )}
                 </div>
-                <span className="mt-1 block font-mono text-sm font-semibold text-white">
+                <span className="card-detail-value mt-1 block font-mono text-sm font-semibold">
                   {card.expiryDate}
                 </span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                     CVV
                   </span>
                   {!useSecureProxy && (
@@ -371,13 +358,13 @@ export function CardDisplay({
                         e.stopPropagation();
                         copyToClipboard(card.cvv, 'cvv');
                       }}
-                      className="rounded p-1 transition-colors hover:bg-white/10"
+                      className="card-copy-btn rounded p-1 transition-colors"
                     >
-                      <Copy className="h-3 w-3 text-slate-400" />
+                      <Copy className="h-3 w-3" />
                     </button>
                   )}
                   {copied === 'cvv' && (
-                    <span className="text-xs text-emerald-400">Copied!</span>
+                    <span className="text-xs text-emerald-500">Copied!</span>
                   )}
                 </div>
                 {useSecureProxy ? (
@@ -389,7 +376,7 @@ export function CardDisplay({
                     className="mt-1"
                   />
                 ) : (
-                  <span className="mt-1 block font-mono text-sm font-semibold text-white">
+                  <span className="card-detail-value mt-1 block font-mono text-sm font-semibold">
                     {showSensitiveData ? card.cvv : '***'}
                   </span>
                 )}
@@ -398,10 +385,10 @@ export function CardDisplay({
 
             {/* Cardholder */}
             <div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                 Cardholder
               </span>
-              <span className="mt-0.5 block text-sm font-bold uppercase tracking-wider text-white">
+              <span className="card-detail-value mt-0.5 block text-sm font-bold uppercase tracking-wider">
                 {card.cardholderName}
               </span>
             </div>
@@ -409,7 +396,7 @@ export function CardDisplay({
 
           {/* Status Overlay */}
           {statusOverlay && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-slate-900/95">
+            <div className="virtual-card-status-overlay absolute inset-0 z-20 flex items-center justify-center rounded-2xl">
               <div
                 className={cn(
                   'flex flex-col items-center rounded-xl border-2 px-8 py-4',
@@ -417,13 +404,13 @@ export function CardDisplay({
                   statusOverlay.borderClass
                 )}
               >
-                <div className="mb-2 rounded-full bg-white/10 p-2">
+                <div className="mb-2 rounded-full bg-black/5 p-2">
                   {statusOverlay.icon}
                 </div>
-                <span className="text-lg font-extrabold uppercase tracking-wider text-white">
+                <span className="status-text text-lg font-extrabold uppercase tracking-wider">
                   {statusOverlay.text}
                 </span>
-                <span className="mt-1 text-sm font-medium text-white/90">
+                <span className="status-subtext mt-1 text-sm font-medium">
                   {statusOverlay.subtext}
                 </span>
               </div>
