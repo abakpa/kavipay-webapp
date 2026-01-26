@@ -5,10 +5,11 @@ import { CardStatus } from '@/types/card';
 
 interface CardActionsProps {
   card: VirtualCard;
-  isCardFlipped: boolean;
+  showSensitiveData: boolean;
   isFreezingCard: boolean;
+  isRevealingCard?: boolean;
   isDeletingCard?: boolean;
-  onToggleCardView: () => void;
+  onToggleVisibility: () => void;
   onFreezeCard: () => void;
   onDeleteCard?: () => void;
   onNavigateToSettings: () => void;
@@ -59,10 +60,11 @@ function ActionButton({
 
 export function CardActions({
   card,
-  isCardFlipped,
+  showSensitiveData,
   isFreezingCard,
+  isRevealingCard = false,
   isDeletingCard = false,
-  onToggleCardView,
+  onToggleVisibility,
   onFreezeCard,
   onDeleteCard,
   onNavigateToSettings,
@@ -70,7 +72,7 @@ export function CardActions({
 }: CardActionsProps) {
   const isCardCurrentlyFrozen =
     card.status === CardStatus.FROZEN || card.status === CardStatus.INACTIVE;
-  const isOperationInProgress = isFreezingCard || isDeletingCard;
+  const isOperationInProgress = isFreezingCard || isDeletingCard || isRevealingCard;
 
   // Frozen card actions - only show unfreeze and delete
   if (isCardCurrentlyFrozen) {
@@ -117,9 +119,11 @@ export function CardActions({
       {/* Action Buttons Row */}
       <div className="flex justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12">
         <ActionButton
-          onClick={onToggleCardView}
+          onClick={onToggleVisibility}
+          disabled={isRevealingCard}
+          isLoading={isRevealingCard}
           icon={
-            isCardFlipped ? (
+            showSensitiveData ? (
               <EyeOff className="h-5 w-5" />
             ) : (
               <Eye className="h-5 w-5" />
@@ -134,10 +138,12 @@ export function CardActions({
         />
         <ActionButton
           onClick={onNavigateToSettings}
+          disabled={isOperationInProgress}
           icon={<Settings className="h-5 w-5" />}
         />
         <ActionButton
           onClick={onNavigateToTopup}
+          disabled={isOperationInProgress}
           icon={<ArrowBigUp className="h-5 w-5" />}
         />
       </div>
@@ -145,7 +151,7 @@ export function CardActions({
       {/* Labels Row */}
       <div className="mt-3 flex justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12">
         <span className="w-[60px] text-center text-xs text-muted-foreground">
-          {isCardFlipped ? 'Hide' : 'Show'}
+          {isRevealingCard ? 'Loading...' : showSensitiveData ? 'Hide' : 'Show'}
         </span>
         <span className="w-[60px] text-center text-xs text-muted-foreground">
           {isFreezingCard ? 'Processing...' : 'Freeze'}

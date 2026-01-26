@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Copy, Snowflake, ShieldOff, Clock, CalendarX, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Copy, Snowflake, ShieldOff, Clock, CalendarX, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SudoSecureDataView } from './SudoSecureDataView';
 import type { VirtualCard } from '@/types/card';
@@ -203,8 +203,14 @@ export function CardDisplay({
               Available Balance
             </span>
             <span className="card-balance-amount mt-1 text-3xl font-bold">
-              {getCurrencySymbol(card.currency)}
-              {card.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {showSensitiveData ? (
+                <>
+                  {getCurrencySymbol(card.currency)}
+                  {card.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </>
+              ) : (
+                '•••••••'
+              )}
             </span>
           </div>
 
@@ -260,19 +266,9 @@ export function CardDisplay({
             <span className="card-brand text-lg font-bold uppercase tracking-wider">
               {(card.brand || 'CARD').toUpperCase()}
             </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onFlip?.();
-              }}
-              className="card-logo-icon rounded-lg p-2 transition-colors"
-            >
-              {showSensitiveData ? (
-                <EyeOff className="h-4 w-4 card-copy-btn" />
-              ) : (
-                <Eye className="h-4 w-4 card-copy-btn" />
-              )}
-            </button>
+            <div className="card-logo-icon flex h-8 w-8 items-center justify-center rounded-lg">
+              <span className="card-logo-text text-xs font-bold">K</span>
+            </div>
           </div>
 
           {/* Loading State on Back Face */}
@@ -293,7 +289,7 @@ export function CardDisplay({
                 <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                   Card Number
                 </span>
-                {!useSecureProxy && (
+                {!useSecureProxy && showSensitiveData && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -330,21 +326,23 @@ export function CardDisplay({
                   <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                     Valid Thru
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyToClipboard(card.expiryDate, 'expiry');
-                    }}
-                    className="card-copy-btn rounded p-1 transition-colors"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </button>
+                  {showSensitiveData && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(card.expiryDate, 'expiry');
+                      }}
+                      className="card-copy-btn rounded p-1 transition-colors"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  )}
                   {copied === 'expiry' && (
                     <span className="text-xs text-emerald-500">Copied!</span>
                   )}
                 </div>
                 <span className="card-detail-value mt-1 block font-mono text-sm font-semibold">
-                  {card.expiryDate}
+                  {showSensitiveData ? card.expiryDate : '••/••'}
                 </span>
               </div>
               <div>
@@ -352,7 +350,7 @@ export function CardDisplay({
                   <span className="card-detail-label text-[10px] font-semibold uppercase tracking-wider">
                     CVV
                   </span>
-                  {!useSecureProxy && (
+                  {!useSecureProxy && showSensitiveData && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -377,7 +375,7 @@ export function CardDisplay({
                   />
                 ) : (
                   <span className="card-detail-value mt-1 block font-mono text-sm font-semibold">
-                    {showSensitiveData ? card.cvv : '***'}
+                    {showSensitiveData ? card.cvv : '•••'}
                   </span>
                 )}
               </div>
