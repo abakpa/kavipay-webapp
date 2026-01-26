@@ -129,6 +129,127 @@
   .dark .total-value-card .balance-hidden {
     color: rgba(255, 255, 255, 0.3) !important;
   }
+
+  /* Virtual Card Display - Light Mode (matching mobile app) */
+  .virtual-card-face {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .virtual-card-face .card-logo-icon {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+
+  .virtual-card-face .card-logo-text,
+  .virtual-card-face .card-brand {
+    color: #1e293b;
+  }
+
+  .virtual-card-face .card-balance-label {
+    color: rgba(30, 41, 59, 0.6);
+  }
+
+  .virtual-card-face .card-balance-amount {
+    color: #0f172a;
+  }
+
+  .virtual-card-face .card-last-four {
+    color: rgba(30, 41, 59, 0.7);
+  }
+
+  .virtual-card-face .card-type-text {
+    color: rgba(30, 41, 59, 0.5);
+  }
+
+  .virtual-card-face .card-detail-label {
+    color: rgba(30, 41, 59, 0.6);
+  }
+
+  .virtual-card-face .card-detail-value {
+    color: #0f172a;
+  }
+
+  .virtual-card-face .card-copy-btn {
+    color: #64748b;
+  }
+
+  .virtual-card-face .card-copy-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Virtual Card Display - Dark Mode */
+  .dark .virtual-card-face {
+    background: linear-gradient(to bottom right, #1e293b, #0f172a) !important;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+
+  .dark .virtual-card-face .card-logo-icon {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+
+  .dark .virtual-card-face .card-logo-text,
+  .dark .virtual-card-face .card-brand {
+    color: #e2e8f0;
+  }
+
+  .dark .virtual-card-face .card-balance-label {
+    color: rgba(226, 232, 240, 0.7);
+  }
+
+  .dark .virtual-card-face .card-balance-amount {
+    color: #f1f5f9;
+  }
+
+  .dark .virtual-card-face .card-last-four {
+    color: rgba(226, 232, 240, 0.8);
+  }
+
+  .dark .virtual-card-face .card-type-text {
+    color: rgba(226, 232, 240, 0.6);
+  }
+
+  .dark .virtual-card-face .card-detail-label {
+    color: rgba(226, 232, 240, 0.7);
+  }
+
+  .dark .virtual-card-face .card-detail-value {
+    color: #f1f5f9;
+  }
+
+  .dark .virtual-card-face .card-copy-btn {
+    color: #94a3b8;
+  }
+
+  .dark .virtual-card-face .card-copy-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Virtual Card Status Overlay */
+  .virtual-card-status-overlay {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+
+  .virtual-card-status-overlay .status-text {
+    color: #1e293b;
+  }
+
+  .virtual-card-status-overlay .status-subtext {
+    color: #475569;
+  }
+
+  .dark .virtual-card-status-overlay {
+    background-color: rgba(15, 23, 42, 0.95);
+  }
+
+  .dark .virtual-card-status-overlay .status-text {
+    color: #ffffff;
+  }
+
+  .dark .virtual-card-status-overlay .status-subtext {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 /* Utility classes */
