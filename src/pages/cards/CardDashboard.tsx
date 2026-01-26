@@ -14,7 +14,8 @@ import { CardList, BVNInputModal, SpendingAnalytics, CardActions } from '@/compo
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
-import { CardStatus } from '@/types/card';
+import { CardStatus, CardProvider } from '@/types/card';
+import { generateCardToken } from '@/lib/api/cards';
 
 export function CardDashboard() {
   const navigate = useNavigate();
@@ -43,6 +44,9 @@ export function CardDashboard() {
   const [showBvnModal, setShowBvnModal] = useState(false);
   const [pendingPreOrderId, setPendingPreOrderId] = useState<string | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [showSensitiveData, setShowSensitiveData] = useState(false);
+  const [cardToken, setCardToken] = useState<string | null>(null);
+  const [isRevealingCard, setIsRevealingCard] = useState(false);
 
   // Check if user is Nigerian (requires BVN for card creation)
   const isNigerian = user?.kyc_country?.code?.toUpperCase() === 'NG';
@@ -155,7 +159,33 @@ export function CardDashboard() {
     }
   };
 
-  const handleToggleCardView = () => {
+  const handleToggleCardView = async () => {
+    if (!showSensitiveData && selectedCard) {
+      // Showing sensitive data - fetch card token for Sudo Secure Proxy
+      setIsRevealingCard(true);
+      try {
+        const isSudoCard = selectedCard.provider === CardProvider.SUDO;
+
+        if (isSudoCard) {
+          const token = await generateCardToken(selectedCard.id);
+          setCardToken(token);
+        }
+
+        setShowSensitiveData(true);
+      } catch (error) {
+        console.error('Failed to get card token:', error);
+        setShowSensitiveData(true);
+      } finally {
+        setIsRevealingCard(false);
+      }
+    } else {
+      // Hiding sensitive data
+      setShowSensitiveData(false);
+      setCardToken(null);
+    }
+  };
+
+  const handleFlipCard = () => {
     setIsCardFlipped(!isCardFlipped);
   };
 
@@ -168,6 +198,11 @@ export function CardDashboard() {
   // Load transactions when card is selected
   const handleSelectCard = async (card: typeof selectedCard) => {
     if (card) {
+      // Reset visibility state when changing cards
+      setShowSensitiveData(false);
+      setCardToken(null);
+      setIsCardFlipped(false);
+
       // Set the active card first
       selectCard(card);
 
@@ -258,15 +293,21 @@ export function CardDashboard() {
             pendingPreOrders={pendingPreOrders}
             onProcessCard={handleProcessPreOrder}
             onCreateCard={handleCreateCard}
+            isFlipped={isCardFlipped}
+            onFlip={handleFlipCard}
+            showSensitiveData={showSensitiveData}
+            cardToken={cardToken}
+            isRevealingCard={isRevealingCard}
           />
 
           {/* Card Actions */}
           {selectedCard && (
             <CardActions
               card={selectedCard}
-              isCardFlipped={isCardFlipped}
+              showSensitiveData={showSensitiveData}
               isFreezingCard={actionLoading === 'freeze' || actionLoading === 'unfreeze'}
-              onToggleCardView={handleToggleCardView}
+              isRevealingCard={isRevealingCard}
+              onToggleVisibility={handleToggleCardView}
               onFreezeCard={handleFreezeUnfreeze}
               onNavigateToSettings={handleSettings}
               onNavigateToTopup={handleTopup}
