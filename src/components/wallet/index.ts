@@ -1,4 +1,4 @@
-export { CurrencySelector } from './CurrencySelector';
+export { CurrencySelector, EnhancedCurrencySelector } from './CurrencySelector';
 export { AmountInput } from './AmountInput';
 export { PaymentDetails } from './PaymentDetails';
 export { CryptoDepositFlow } from './CryptoDepositFlow';
