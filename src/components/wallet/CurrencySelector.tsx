@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Check, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import type { CryptoCurrency } from '@/types/wallet';
-import type { CryptoCurrencyListItem, GroupedCurrency } from '@/types/deposit';
+import type { CryptoCurrencyListItem } from '@/types/deposit';
 import { cn } from '@/lib/utils';
 
 interface CurrencySelectorProps {
