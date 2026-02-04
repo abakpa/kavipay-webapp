@@ -26,6 +26,7 @@ import { KYCStatus } from '@/pages/kyc/KYCStatus';
 // Wallet
 import { Deposit } from '@/pages/wallet/Deposit';
 import { Send } from '@/pages/wallet/Send';
+import { NairaDeposit } from '@/pages/deposit/NairaDeposit';
 
 // Referral
 import { Referral } from '@/pages/referral/Referral';
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
 
       // Wallet
       { path: 'deposit', element: <Deposit /> },
+      { path: 'deposit/naira', element: <NairaDeposit /> },
       { path: 'send', element: <Send /> },
 
       // Referral
