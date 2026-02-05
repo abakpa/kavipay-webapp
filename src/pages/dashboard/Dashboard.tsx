@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
@@ -9,6 +9,7 @@ import { CardsOverviewCard } from '@/components/dashboard/CardsOverviewCard';
 import { RecentActivityList } from '@/components/dashboard/RecentActivityList';
 import { QuickLinksRow } from '@/components/dashboard/QuickLinksRow';
 import { KYCStatusBanner } from '@/components/kyc/KYCStatusBanner';
+import { getNairaExchangeRate } from '@/lib/api/deposit';
 import type { CardTransaction } from '@/types/card';
 
 export function Dashboard() {
@@ -16,11 +17,28 @@ export function Dashboard() {
   const { user } = useAuth();
   const { cards, transactions: transactionsMap } = useVirtualCards();
   const { kycStatus, loadKYCStatus } = useKYC();
+  const [exchangeRate, setExchangeRate] = useState(1500); // Default fallback
 
   // Refresh KYC status when dashboard mounts to ensure we have the latest status
   useEffect(() => {
     loadKYCStatus();
   }, [loadKYCStatus]);
+
+  // Fetch exchange rate on mount
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const rateData = await getNairaExchangeRate();
+        if (rateData?.rate) {
+          setExchangeRate(rateData.rate);
+        }
+      } catch (error) {
+        console.error('Failed to fetch exchange rate:', error);
+        // Keep default fallback rate
+      }
+    };
+    fetchExchangeRate();
+  }, []);
 
   // Flatten transactions from all cards into a single array
   const allTransactions = useMemo((): CardTransaction[] => {
@@ -57,8 +75,9 @@ export function Dashboard() {
       .slice(0, 5);
   }, [allTransactions]);
 
-  // Wallet balance from user context
-  const walletBalance = user?.gameWalletBalance ?? 0;
+  // Wallet balances from user context
+  const dollarBalance = user?.dollarBalance ?? 0;
+  const nairaBalance = user?.nairaBalance ?? 0;
 
   // Navigation handlers
   const handleDeposit = () => {
@@ -126,7 +145,11 @@ export function Dashboard() {
       </div>
 
       {/* Total Balance Card */}
-      <TotalValueCard balance={walletBalance} currency="USD" />
+      <TotalValueCard
+        dollarBalance={dollarBalance}
+        nairaBalance={nairaBalance}
+        exchangeRate={exchangeRate}
+      />
 
       {/* KYC Status Banner */}
       <KYCStatusBanner />

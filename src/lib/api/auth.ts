@@ -10,6 +10,8 @@ export interface MiningUserData {
   telegramId?: string;
   balance?: number;
   gameWalletBalance?: number;
+  dollarWalletBalance?: number; // USD wallet balance
+  nairaWalletBalance?: number; // NGN wallet balance
   level?: number;
   username?: string;
   miningRate?: number;
