@@ -86,30 +86,102 @@ export interface TokenBalance {
   chain?: string;
 }
 
-// Transaction types for wallet
-export const WalletTransactionType = {
-  DEPOSIT: 'deposit',
-  WITHDRAWAL: 'withdrawal',
-  TRANSFER: 'transfer',
-  CARD_TOPUP: 'card_topup',
-  CARD_WITHDRAW: 'card_withdraw',
-  FEE: 'fee',
-} as const;
-export type WalletTransactionType = (typeof WalletTransactionType)[keyof typeof WalletTransactionType];
+// Wallet transaction types (matches mobile app)
+export type WalletTransactionType =
+  | 'crypto_deposit'
+  | 'naira_deposit'
+  | 'card_creation'
+  | 'card_topup'
+  | 'card_refund'
+  | 'card_termination'
+  | 'airtime'
+  | 'data'
+  | 'power'
+  | 'tv_subscription'
+  | 'currency_conversion'
+  | 'system_credit'
+  | 'system_debit'
+  | 'reversal';
+
+export type WalletTransactionStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'reversed';
+
+export type WalletTransactionDirection = 'credit' | 'debit';
+
+export type WalletCurrency = 'USD' | 'NGN';
 
 export interface WalletTransaction {
   id: string;
+  userId: number;
   type: WalletTransactionType;
+  currency: WalletCurrency;
   amount: number;
-  currency: string;
-  status: string;
+  direction: WalletTransactionDirection;
+  balanceBefore: number;
+  balanceAfter: number;
+  status: WalletTransactionStatus;
+  sourceType?: string;
+  sourceId?: string;
   description?: string;
-  date: string;
-  hash?: string;
-  from?: string;
-  to?: string;
-  fee?: number;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+  relatedTxId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export interface WalletTransactionPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface WalletTransactionSummary {
+  totalCredits: number;
+  totalDebits: number;
+  netChange: number;
+}
+
+export interface WalletTransactionsResponse {
+  transactions: WalletTransaction[];
+  pagination: WalletTransactionPagination;
+  summary: WalletTransactionSummary;
+}
+
+export interface GetWalletTransactionsParams {
+  page?: number;
+  limit?: number;
+  currency?: WalletCurrency;
+  type?: WalletTransactionType;
+  status?: WalletTransactionStatus;
+  direction?: WalletTransactionDirection;
+  startDate?: string;
+  endDate?: string;
+  sourceType?: string;
+}
+
+// Transaction type labels for display
+export const WALLET_TRANSACTION_TYPE_LABELS: Record<WalletTransactionType, string> = {
+  crypto_deposit: 'Crypto Deposit',
+  naira_deposit: 'Naira Deposit',
+  card_creation: 'Card Creation',
+  card_topup: 'Card Top-up',
+  card_refund: 'Card Refund',
+  card_termination: 'Card Termination',
+  airtime: 'Airtime',
+  data: 'Data',
+  power: 'Electricity',
+  tv_subscription: 'TV Subscription',
+  currency_conversion: 'Currency Conversion',
+  system_credit: 'System Credit',
+  system_debit: 'System Debit',
+  reversal: 'Reversal',
+};
 
 // Deposit step types
 export type DepositStep = 'select' | 'payment' | 'status';

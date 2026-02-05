@@ -28,6 +28,9 @@ import { Deposit } from '@/pages/wallet/Deposit';
 import { Send } from '@/pages/wallet/Send';
 import { NairaDeposit } from '@/pages/deposit/NairaDeposit';
 
+// Transactions
+import { TransactionsPage, TransactionDetailPage } from '@/pages/transactions';
+
 // Referral
 import { Referral } from '@/pages/referral/Referral';
 
@@ -83,6 +86,10 @@ export const router = createBrowserRouter([
       { path: 'deposit', element: <Deposit /> },
       { path: 'deposit/naira', element: <NairaDeposit /> },
       { path: 'send', element: <Send /> },
+
+      // Transactions
+      { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'transactions/:id', element: <TransactionDetailPage /> },
 
       // Referral
       { path: 'referral', element: <Referral /> },
