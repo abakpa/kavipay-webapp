@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
@@ -10,7 +10,9 @@ import { RecentActivityList } from '@/components/dashboard/RecentActivityList';
 import { QuickLinksRow } from '@/components/dashboard/QuickLinksRow';
 import { KYCStatusBanner } from '@/components/kyc/KYCStatusBanner';
 import { getNairaExchangeRate } from '@/lib/api/deposit';
+import { getWalletTransactions } from '@/lib/api/wallet';
 import type { CardTransaction } from '@/types/card';
+import type { WalletTransaction } from '@/types/wallet';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export function Dashboard() {
   const { cards, transactions: transactionsMap } = useVirtualCards();
   const { kycStatus, loadKYCStatus } = useKYC();
   const [exchangeRate, setExchangeRate] = useState(1500); // Default fallback
+  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
 
   // Refresh KYC status when dashboard mounts to ensure we have the latest status
   useEffect(() => {
@@ -40,8 +43,22 @@ export function Dashboard() {
     fetchExchangeRate();
   }, []);
 
+  // Fetch wallet transactions on mount
+  const fetchWalletTransactions = useCallback(async () => {
+    try {
+      const response = await getWalletTransactions({ limit: 10 });
+      setWalletTransactions(response.transactions || []);
+    } catch (error) {
+      console.error('Failed to fetch wallet transactions:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWalletTransactions();
+  }, [fetchWalletTransactions]);
+
   // Flatten transactions from all cards into a single array
-  const allTransactions = useMemo((): CardTransaction[] => {
+  const allCardTransactions = useMemo((): CardTransaction[] => {
     return Object.values(transactionsMap).flat();
   }, [transactionsMap]);
 
@@ -50,13 +67,13 @@ export function Dashboard() {
     return cards.filter((card) => card.status === 'active').length;
   }, [cards]);
 
-  // Calculate monthly spending
+  // Calculate monthly spending from card transactions
   const monthlySpending = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    return allTransactions
+    return allCardTransactions
       .filter((tx) => {
         const txDate = new Date(tx.date);
         return (
@@ -66,14 +83,7 @@ export function Dashboard() {
         );
       })
       .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  }, [allTransactions]);
-
-  // Get recent transactions (last 5)
-  const recentTransactions = useMemo(() => {
-    return [...allTransactions]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5);
-  }, [allTransactions]);
+  }, [allCardTransactions]);
 
   // Wallet balances from user context
   const dollarBalance = user?.dollarBalance ?? 0;
@@ -105,19 +115,15 @@ export function Dashboard() {
   };
 
   const handleViewAllTransactions = () => {
-    navigate('/cards');
+    navigate('/transactions');
   };
 
-  const handleTransactionPress = (transaction: CardTransaction) => {
-    // Navigate to card transactions page
-    if (transaction.cardId) {
-      navigate(`/cards/${transaction.cardId}/transactions`);
-    } else {
-      navigate('/cards');
-    }
+  const handleTransactionPress = (transaction: WalletTransaction) => {
+    // Navigate to transaction detail page (if implemented)
+    navigate(`/transactions/${transaction.id}`);
   };
 
-  // Quick links handlers (placeholder - these features may not be implemented yet)
+  // Quick links handlers
   const handleAirtime = () => {
     navigate('/airtime');
   };
@@ -165,9 +171,9 @@ export function Dashboard() {
         onViewAllCards={handleViewAllCards}
       />
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Now using wallet transactions */}
       <RecentActivityList
-        transactions={recentTransactions}
+        transactions={walletTransactions}
         onViewAll={handleViewAllTransactions}
         onTransactionPress={handleTransactionPress}
       />
