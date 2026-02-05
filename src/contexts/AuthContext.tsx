@@ -55,6 +55,8 @@ interface User {
   phoneNumber?: string;
   balance: number;
   gameWalletBalance: number;
+  dollarBalance: number; // USD wallet balance
+  nairaBalance: number; // NGN wallet balance
   pltlBalance: number;
   userId: string;
   payscribeCustomerId: string;
@@ -125,6 +127,8 @@ const convertFirebaseUser = (
     phoneNumber: miningData?.phoneNumber,
     balance: miningData?.balance || 0,
     gameWalletBalance: miningData?.gameWalletBalance || 0,
+    dollarBalance: miningData?.dollarWalletBalance || 0,
+    nairaBalance: miningData?.nairaWalletBalance || 0,
     pltlBalance: miningData?.pltlBalance || 0,
     userId: miningData?.id || '',
     payscribeCustomerId: miningData?.payscribeCustomerId || '',

@@ -3,13 +3,24 @@ import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TotalValueCardProps {
-  balance: number;
-  currency?: string;
+  dollarBalance: number;
+  nairaBalance: number;
+  exchangeRate?: number; // NGN per 1 USD
   className?: string;
 }
 
-export function TotalValueCard({ balance, currency = 'USD', className }: TotalValueCardProps) {
+export function TotalValueCard({
+  dollarBalance,
+  nairaBalance,
+  exchangeRate = 1500, // Default fallback rate
+  className,
+}: TotalValueCardProps) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  // Calculate total balance in USD
+  const nairaInUsd = exchangeRate > 0 ? nairaBalance / exchangeRate : 0;
+  const totalBalanceUsd = dollarBalance + nairaInUsd;
 
   const formatBalance = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -18,14 +29,17 @@ export function TotalValueCard({ balance, currency = 'USD', className }: TotalVa
     }).format(amount);
   };
 
-  const getCurrencySymbol = (curr: string) => {
-    const symbols: Record<string, string> = {
-      USD: '$',
-      NGN: '₦',
-      EUR: '€',
-      GBP: '£',
-    };
-    return symbols[curr] || curr;
+  const formatNaira = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const handleBalanceClick = () => {
+    if (isBalanceVisible) {
+      setShowBreakdown(!showBreakdown);
+    }
   };
 
   return (
@@ -62,15 +76,49 @@ export function TotalValueCard({ balance, currency = 'USD', className }: TotalVa
         </div>
 
         {/* Balance Display */}
-        <div className="flex items-baseline">
+        <div
+          className="cursor-pointer"
+          onClick={handleBalanceClick}
+        >
           {isBalanceVisible ? (
             <>
-              <span className="currency-label text-xl font-medium mr-1">
-                {currency}
-              </span>
-              <span className="balance-amount text-[44px] font-bold tracking-tight leading-tight dark:drop-shadow-[0_2px_8px_rgba(77,166,255,0.15)]">
-                {getCurrencySymbol(currency)}{formatBalance(balance)}
-              </span>
+              <div className="flex items-baseline">
+                <span className="currency-label text-xl font-medium mr-1">
+                  USD
+                </span>
+                <span className="balance-amount text-[44px] font-bold tracking-tight leading-tight dark:drop-shadow-[0_2px_8px_rgba(77,166,255,0.15)]">
+                  ${formatBalance(totalBalanceUsd)}
+                </span>
+              </div>
+
+              {/* Breakdown Section */}
+              {showBreakdown && (
+                <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[13px] font-medium text-muted-foreground">
+                      USD Wallet:
+                    </span>
+                    <span className="text-[13px] font-semibold text-foreground">
+                      ${formatBalance(dollarBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] font-medium text-muted-foreground">
+                      NGN Wallet:
+                    </span>
+                    <span className="text-[13px] font-semibold text-foreground">
+                      ₦{formatNaira(nairaBalance)} (~${formatBalance(nairaInUsd)})
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tap hint */}
+              {!showBreakdown && (nairaBalance > 0 || dollarBalance > 0) && (
+                <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                  Tap to see breakdown
+                </p>
+              )}
             </>
           ) : (
             <span className="balance-hidden text-[44px] font-bold tracking-[8px]">
