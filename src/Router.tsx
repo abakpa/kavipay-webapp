@@ -27,6 +27,7 @@ import { KYCStatus } from '@/pages/kyc/KYCStatus';
 import { Deposit } from '@/pages/wallet/Deposit';
 import { Send } from '@/pages/wallet/Send';
 import { NairaDeposit } from '@/pages/deposit/NairaDeposit';
+import { NairaWithdrawal } from '@/pages/withdrawal';
 
 // Transactions
 import { TransactionsPage, TransactionDetailPage } from '@/pages/transactions';
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
       // Wallet
       { path: 'deposit', element: <Deposit /> },
       { path: 'deposit/naira', element: <NairaDeposit /> },
+      { path: 'withdrawal/naira', element: <NairaWithdrawal /> },
       { path: 'send', element: <Send /> },
 
       // Transactions
