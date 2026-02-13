@@ -163,6 +163,71 @@ export interface NairaExchangeRate {
 }
 
 // ==========================================
+// NAIRA WITHDRAWAL/PAYOUT TYPES
+// ==========================================
+
+// Nigerian bank for payout
+export interface NigerianBank {
+  _id: string;
+  name: string;
+  slug: string;
+  code: string;
+  longCode: string;
+  nipCode: string;
+  isActive: boolean;
+}
+
+// Name enquiry result from bank validation
+export interface NameEnquiryResult {
+  accountName: string;
+  accountNumber: string;
+  bankCode: string;
+  nameEnquiryReference: string;
+  sessionId: string;
+}
+
+// Naira payout status
+export type NairaPayoutStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+// Naira payout record
+export interface NairaPayout {
+  id: number;
+  userId: number;
+  amountNgn: number;
+  fee: number;
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  paymentReference: string;
+  status: NairaPayoutStatus;
+  completedAt?: string;
+  errorMessage?: string;
+  createdAt: string;
+}
+
+// Naira payouts list response
+export interface NairaPayoutsResponse {
+  payouts: NairaPayout[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Naira payout request params
+export interface InitiateNairaPayoutParams {
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  nameEnquiryReference: string;
+  amount: number;
+}
+
+// ==========================================
 // CONSTANTS
 // ==========================================
 

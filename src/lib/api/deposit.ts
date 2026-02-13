@@ -7,6 +7,11 @@ import type {
   NairaDeposit,
   NairaDepositsResponse,
   NairaExchangeRate,
+  NigerianBank,
+  NameEnquiryResult,
+  NairaPayout,
+  NairaPayoutsResponse,
+  InitiateNairaPayoutParams,
 } from '@/types/deposit';
 
 // ==========================================
@@ -161,6 +166,79 @@ export async function getNairaDeposits(
  */
 export async function getNairaDeposit(depositId: string): Promise<NairaDeposit> {
   const response = await api.get<NairaDeposit>(`/naira/deposits/${depositId}`);
+  return response.data;
+}
+
+// ==========================================
+// NAIRA WITHDRAWAL/PAYOUT API
+// ==========================================
+
+// Cache for Nigerian banks (valid for 1 hour)
+let banksCache: { banks: NigerianBank[]; timestamp: number } | null = null;
+const BANKS_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Get list of Nigerian banks
+ * Cached for 1 hour to reduce API calls
+ */
+export async function getNigerianBanks(): Promise<NigerianBank[]> {
+  // Check cache first
+  if (banksCache && Date.now() - banksCache.timestamp < BANKS_CACHE_DURATION) {
+    return banksCache.banks;
+  }
+
+  const response = await api.get<{ banks: NigerianBank[] }>('/naira/banks');
+  const banks = response.data.banks;
+
+  // Update cache
+  banksCache = { banks, timestamp: Date.now() };
+
+  return banks;
+}
+
+/**
+ * Validate bank account (name enquiry)
+ * Returns account holder name for verification
+ */
+export async function validateBankAccount(
+  bankCode: string,
+  accountNumber: string
+): Promise<NameEnquiryResult> {
+  const response = await api.post<NameEnquiryResult>('/naira/payout/name-enquiry', {
+    bankCode,
+    accountNumber,
+  });
+  return response.data;
+}
+
+/**
+ * Initiate Naira payout (withdrawal to bank)
+ */
+export async function initiateNairaPayout(
+  params: InitiateNairaPayoutParams
+): Promise<NairaPayout> {
+  const response = await api.post<NairaPayout>('/naira/payout', params);
+  return response.data;
+}
+
+/**
+ * Get list of Naira payouts with pagination
+ */
+export async function getNairaPayouts(
+  page: number = 1,
+  limit: number = 10
+): Promise<NairaPayoutsResponse> {
+  const response = await api.get<NairaPayoutsResponse>('/naira/payouts', {
+    params: { page, limit },
+  });
+  return response.data;
+}
+
+/**
+ * Get a single Naira payout by ID
+ */
+export async function getNairaPayout(payoutId: number): Promise<NairaPayout> {
+  const response = await api.get<NairaPayout>(`/naira/payouts/${payoutId}`);
   return response.data;
 }
 
@@ -394,3 +472,97 @@ export function generateMockCryptoAddress(currency: string): string {
 
   return address;
 }
+
+// Mock Nigerian banks
+export const MOCK_NIGERIAN_BANKS: NigerianBank[] = [
+  {
+    _id: '1',
+    name: 'Access Bank',
+    slug: 'access-bank',
+    code: '044',
+    longCode: '044150149',
+    nipCode: '044',
+    isActive: true,
+  },
+  {
+    _id: '2',
+    name: 'Guaranty Trust Bank',
+    slug: 'gtbank',
+    code: '058',
+    longCode: '058152036',
+    nipCode: '058',
+    isActive: true,
+  },
+  {
+    _id: '3',
+    name: 'First Bank of Nigeria',
+    slug: 'first-bank',
+    code: '011',
+    longCode: '011151003',
+    nipCode: '011',
+    isActive: true,
+  },
+  {
+    _id: '4',
+    name: 'United Bank for Africa',
+    slug: 'uba',
+    code: '033',
+    longCode: '033153513',
+    nipCode: '033',
+    isActive: true,
+  },
+  {
+    _id: '5',
+    name: 'Zenith Bank',
+    slug: 'zenith-bank',
+    code: '057',
+    longCode: '057150013',
+    nipCode: '057',
+    isActive: true,
+  },
+  {
+    _id: '6',
+    name: 'Opay',
+    slug: 'opay',
+    code: '999992',
+    longCode: '999992',
+    nipCode: '999992',
+    isActive: true,
+  },
+  {
+    _id: '7',
+    name: 'PalmPay',
+    slug: 'palmpay',
+    code: '999991',
+    longCode: '999991',
+    nipCode: '999991',
+    isActive: true,
+  },
+  {
+    _id: '8',
+    name: 'Kuda Bank',
+    slug: 'kuda-bank',
+    code: '50211',
+    longCode: '50211',
+    nipCode: '50211',
+    isActive: true,
+  },
+  {
+    _id: '9',
+    name: 'Moniepoint MFB',
+    slug: 'moniepoint',
+    code: '50515',
+    longCode: '50515',
+    nipCode: '50515',
+    isActive: true,
+  },
+  {
+    _id: '10',
+    name: 'Stanbic IBTC Bank',
+    slug: 'stanbic-ibtc',
+    code: '221',
+    longCode: '221159522',
+    nipCode: '221',
+    isActive: true,
+  },
+];
