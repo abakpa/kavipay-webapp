@@ -486,10 +486,15 @@ export const getCardTransactions = async (
 
 export const topupCard = async (
   cardId: string,
-  amount: number
+  amount: number,
+  sourceCurrency?: string
 ): Promise<CardTransaction> => {
   // Use miningApi for topup (requires mining JWT token)
-  const response = await miningApi.post(`/cards/${cardId}/topup`, { amount });
+  const payload: { amount: number; sourceCurrency?: string } = { amount };
+  if (sourceCurrency) {
+    payload.sourceCurrency = sourceCurrency;
+  }
+  const response = await miningApi.post(`/cards/${cardId}/topup`, payload);
   return response.data;
 };
 
