@@ -146,7 +146,7 @@ export function Data() {
       items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
     }
 
-    items.push({ label: 'Total', value: `₦${(selectedBundle?.amount || 0).toLocaleString()}`, highlight: true });
+    items.push({ label: 'Total', value: `₦${(selectedBundle?.amount || 0).toLocaleString()}` });
     return items;
   };
 

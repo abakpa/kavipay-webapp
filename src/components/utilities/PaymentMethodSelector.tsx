@@ -35,7 +35,7 @@ const TOP_CURRENCY_SYMBOLS = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'BNB', 'TON',
 interface GroupedCurrency {
   symbol: string;
   name: string;
-  logo: string;
+  logo?: string;
   networks: CryptoCurrencyListItem[];
 }
 

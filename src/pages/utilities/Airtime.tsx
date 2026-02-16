@@ -139,7 +139,7 @@ export function Airtime() {
       items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
     }
 
-    items.push({ label: 'Total', value: `₦${numericAmount.toLocaleString()}`, highlight: true });
+    items.push({ label: 'Total', value: `₦${numericAmount.toLocaleString()}` });
     return items;
   };
 
