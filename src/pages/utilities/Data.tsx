@@ -10,6 +10,7 @@ import {
   TransactionSummary,
   StepIndicator,
 } from '@/components/utilities';
+import type { CryptoSelection, WalletCurrency } from '@/components/utilities/PaymentMethodSelector';
 import { DataNetworkProviders, ValidationPatterns } from '@/constants/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
@@ -27,10 +28,13 @@ export function Data() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedBundle, setSelectedBundle] = useState<DataBundle | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [cryptoSelection, setCryptoSelection] = useState<CryptoSelection | null>(null);
+  const [walletCurrency, setWalletCurrency] = useState<WalletCurrency | null>(null);
   const [phoneError, setPhoneError] = useState('');
   const [isBundlesLoading, setIsBundlesLoading] = useState(false);
 
-  const walletBalance = user?.gameWalletBalance ?? 0;
+  const dollarBalance = user?.dollarBalance ?? 0;
+  const nairaBalance = user?.nairaBalance ?? 0;
 
   // Load data bundles when provider changes
   useEffect(() => {
@@ -68,7 +72,8 @@ export function Data() {
         setCurrentStep(2);
       }
     } else if (currentStep === 2) {
-      if (paymentMethod) {
+      // For wallet, require wallet currency selection; for crypto, require crypto selection
+      if ((paymentMethod === 'wallet' && walletCurrency) || (paymentMethod === 'crypto' && cryptoSelection)) {
         setCurrentStep(3);
       }
     }
@@ -91,6 +96,13 @@ export function Data() {
       network: selectedProvider.id,
       variationCode: selectedBundle.variationCode,
       paymentMethod,
+      ...(paymentMethod === 'crypto' && cryptoSelection && {
+        token: cryptoSelection.currency,
+        cryptoNetwork: cryptoSelection.network,
+      }),
+      ...(paymentMethod === 'wallet' && walletCurrency && {
+        paymentCurrency: walletCurrency,
+      }),
     });
 
     if (result.success) {
@@ -118,13 +130,30 @@ export function Data() {
     }
   };
 
-  const getSummaryItems = () => [
-    { label: 'Network', value: selectedProvider?.name.replace(' Data', '') || '-' },
-    { label: 'Phone Number', value: phoneNumber || '-' },
-    { label: 'Plan', value: selectedBundle?.name || '-' },
-    { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
-    { label: 'Total', value: `₦${(selectedBundle?.amount || 0).toLocaleString()}`, highlight: true },
-  ];
+  const getSummaryItems = () => {
+    const items = [
+      { label: 'Network', value: selectedProvider?.name.replace(' Data', '') || '-' },
+      { label: 'Phone Number', value: phoneNumber || '-' },
+      { label: 'Plan', value: selectedBundle?.name || '-' },
+      { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
+    ];
+
+    if (paymentMethod === 'wallet' && walletCurrency) {
+      items.push({ label: 'Wallet', value: `${walletCurrency} Wallet` });
+    }
+
+    if (paymentMethod === 'crypto' && cryptoSelection) {
+      items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
+    }
+
+    items.push({ label: 'Total', value: `₦${(selectedBundle?.amount || 0).toLocaleString()}` });
+    return items;
+  };
+
+  // Check if payment selection is complete
+  const isPaymentSelectionComplete =
+    (paymentMethod === 'wallet' && walletCurrency) ||
+    (paymentMethod === 'crypto' && cryptoSelection);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -183,8 +212,13 @@ export function Data() {
           <PaymentMethodSelector
             selectedMethod={paymentMethod}
             onSelect={setPaymentMethod}
-            walletBalance={walletBalance}
-            requiredAmount={(selectedBundle?.amount || 0) / 1500}
+            dollarBalance={dollarBalance}
+            nairaBalance={nairaBalance}
+            amountInNaira={selectedBundle?.amount || 0}
+            selectedCrypto={cryptoSelection}
+            onCryptoSelect={setCryptoSelection}
+            selectedWalletCurrency={walletCurrency}
+            onWalletCurrencySelect={setWalletCurrency}
           />
         )}
 
@@ -219,7 +253,7 @@ export function Data() {
             isBundlesLoading ||
             (currentStep === 0 && (!selectedProvider || !phoneNumber)) ||
             (currentStep === 1 && !selectedBundle) ||
-            (currentStep === 2 && !paymentMethod)
+            (currentStep === 2 && !isPaymentSelectionComplete)
           }
           className="flex-1"
         >

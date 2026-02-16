@@ -60,6 +60,7 @@ export const buyAirtime = async (data: {
   currencyNetwork: string;
   currency: string;
   paymentMethod: string;
+  paymentCurrency?: 'USD' | 'NGN';
 }): Promise<{ success: boolean; message: string; transactionId?: string }> => {
   const response = await api.post('/utilities/buy-aitime', data);
   return response.data;
@@ -94,6 +95,7 @@ export const buyData = async (data: {
   variationCode: string;
   currency: string;
   paymentMethod: string;
+  paymentCurrency?: 'USD' | 'NGN';
 }): Promise<{ success: boolean; message: string; transactionId?: string }> => {
   const response = await api.post('/utilities/buy-data', data);
   return response.data;
@@ -244,6 +246,7 @@ export const buyPower = async (data: {
   currency: string;
   paymentMethod: string;
   phoneNumber: string;
+  paymentCurrency?: 'USD' | 'NGN';
 }): Promise<{
   success: boolean;
   message: string;
@@ -322,6 +325,7 @@ export const subscribeTv = async (data: {
   phoneNumber: string;
   currency: string;
   paymentMethod: string;
+  paymentCurrency?: 'USD' | 'NGN';
 }): Promise<{
   success: boolean;
   message: string;
