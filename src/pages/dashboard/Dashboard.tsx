@@ -98,8 +98,8 @@ export function Dashboard() {
     navigate('/send');
   };
 
-  const handleEarn = () => {
-    navigate('/referral');
+  const handleSpend = () => {
+    navigate('/utilities');
   };
 
   const handleAddCard = () => {
@@ -161,7 +161,7 @@ export function Dashboard() {
       <KYCStatusBanner />
 
       {/* Quick Action Buttons */}
-      <QuickActionButtons onDeposit={handleDeposit} onSend={handleSend} onEarn={handleEarn} />
+      <QuickActionButtons onDeposit={handleDeposit} onSend={handleSend} onSpend={handleSpend} />
 
       {/* Cards Overview */}
       <CardsOverviewCard

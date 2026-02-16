@@ -27,6 +27,21 @@ import { SpendingControlsModal } from '@/components/cards/SpendingControlsModal'
 import { BillingAddressModal } from '@/components/cards/BillingAddressModal';
 import { DeleteCardModal } from '@/components/cards/DeleteCardModal';
 
+const getCurrencySymbol = (currency: string): string => {
+  switch (currency.toUpperCase()) {
+    case 'USD':
+      return '$';
+    case 'NGN':
+      return '₦';
+    case 'EUR':
+      return '€';
+    case 'GBP':
+      return '£';
+    default:
+      return currency;
+  }
+};
+
 interface SettingItem {
   id: string;
   title: string;
@@ -319,7 +334,7 @@ export function CardSettings() {
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-foreground">
-                ${currentCard.balance.toFixed(2)}
+                {getCurrencySymbol(currentCard.currency)}{currentCard.balance.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground">{currentCard.currency}</p>
             </div>

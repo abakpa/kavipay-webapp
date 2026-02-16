@@ -202,7 +202,7 @@ interface VirtualCardContextType extends VirtualCardState {
       endDate?: string;
     }
   ) => Promise<void>;
-  topupCard: (cardId: string, amount: number) => Promise<void>;
+  topupCard: (cardId: string, amount: number, sourceCurrency?: string) => Promise<void>;
   withdrawFromCard: (cardId: string, amount: number) => Promise<void>;
 
   // Pre-order Operations
@@ -423,11 +423,11 @@ export function VirtualCardProvider({ children }: VirtualCardProviderProps) {
     []
   );
 
-  const topupCard = useCallback(async (cardId: string, amount: number) => {
+  const topupCard = useCallback(async (cardId: string, amount: number, sourceCurrency?: string) => {
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
-      const transaction = await cardApi.topupCard(cardId, amount);
+      const transaction = await cardApi.topupCard(cardId, amount, sourceCurrency);
       dispatch({ type: 'ADD_TRANSACTION', payload: { cardId, transaction } });
       // Refresh card to update balance
       const card = await cardApi.getCardById(cardId);
