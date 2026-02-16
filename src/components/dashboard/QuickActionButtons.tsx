@@ -1,10 +1,10 @@
-import { ArrowDownToLine, Send, Gift } from 'lucide-react';
+import { ArrowDownToLine, Send, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QuickActionButtonsProps {
   onDeposit: () => void;
   onSend: () => void;
-  onEarn: () => void;
+  onSpend: () => void;
   className?: string;
 }
 
@@ -48,7 +48,7 @@ function ActionButton({ icon, label, onClick, variant }: ActionButtonProps) {
 export function QuickActionButtons({
   onDeposit,
   onSend,
-  onEarn,
+  onSpend,
   className,
 }: QuickActionButtonsProps) {
   return (
@@ -66,9 +66,9 @@ export function QuickActionButtons({
         variant="warning"
       />
       <ActionButton
-        icon={<Gift className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
-        label="Earn"
-        onClick={onEarn}
+        icon={<ShoppingBag className="h-[18px] w-[18px] sm:h-5 sm:w-5" />}
+        label="Spend"
+        onClick={onSpend}
         variant="success"
       />
     </div>

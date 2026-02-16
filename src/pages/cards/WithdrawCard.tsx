@@ -1,32 +1,25 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  ArrowLeft,
-  CreditCard,
-  Info,
-  Loader2,
-  AlertTriangle,
-  Wallet,
-} from 'lucide-react';
+import { ArrowLeft, ArrowDownCircle, Info, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { AmountInput } from '@/components/cards/AmountInput';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
 import { cn } from '@/lib/utils';
 
-// Minimum balance that must remain on card after withdrawal
-const MINIMUM_CARD_BALANCE = 1.0;
-const MINIMUM_WITHDRAWAL = 1.0;
+const formatCurrency = (amount: number, currency: string): string => {
+  if (currency === 'NGN') {
+    return `₦${amount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+  }
+  return `$${amount.toFixed(2)}`;
+};
 
 export function WithdrawCard() {
   const navigate = useNavigate();
   const { cardId } = useParams<{ cardId: string }>();
-  const { cards, selectedCard, selectCard, withdrawFromCard, loadCards } =
-    useVirtualCards();
+  const { cards, selectedCard, selectCard, withdrawFromCard, loadCards } = useVirtualCards();
 
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Find and select the card from URL params
@@ -40,48 +33,49 @@ export function WithdrawCard() {
   }, [cardId, cards, selectCard]);
 
   const currentCard = selectedCard;
+  const isNaira = currentCard?.currency?.toUpperCase() === 'NGN';
+  const currencySymbol = isNaira ? '₦' : '$';
 
-  const parsedAmount = useMemo(() => {
-    const v = parseFloat(amount);
-    return isNaN(v) ? 0 : v;
-  }, [amount]);
-
-  const maxWithdrawable = useMemo(() => {
-    if (!currentCard) return 0;
-    return Math.max(0, currentCard.balance - MINIMUM_CARD_BALANCE);
-  }, [currentCard]);
-
-  const isValidAmount = parsedAmount >= MINIMUM_WITHDRAWAL;
-  const exceedsBalance = currentCard ? parsedAmount > currentCard.balance : false;
-  const exceedsMaxWithdrawable = parsedAmount > maxWithdrawable;
+  const handleAmountChange = (value: string) => {
+    // Only allow numbers and decimal point
+    if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
+      setAmount(value);
+      setError(null);
+    }
+  };
 
   const validateWithdrawal = (): boolean => {
     if (!currentCard) {
-      setError('No card selected');
+      setError('Card not found');
       return false;
     }
 
-    if (!isValidAmount) {
-      setError(`Minimum withdrawal amount is $${MINIMUM_WITHDRAWAL.toFixed(2)}`);
+    const withdrawalAmount = parseFloat(amount);
+    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
+      setError('Please enter a valid withdrawal amount');
       return false;
     }
 
-    if (exceedsBalance) {
-      setError('Amount exceeds available balance');
+    if (withdrawalAmount > currentCard.balance) {
+      setError('You cannot withdraw more than your available balance');
       return false;
     }
 
-    if (exceedsMaxWithdrawable) {
-      setError(
-        `Maximum withdrawal is $${maxWithdrawable.toFixed(2)}. A minimum balance of $${MINIMUM_CARD_BALANCE.toFixed(2)} must remain on the card.`
-      );
+    if (withdrawalAmount < 1.0) {
+      setError(`Minimum withdrawal amount is ${currencySymbol}1.00`);
+      return false;
+    }
+
+    // minimum card balance after withdrawal is 1.00
+    if (currentCard.balance - withdrawalAmount < 1.0) {
+      setError(`Minimum card balance is ${currencySymbol}1.00 after withdrawal`);
       return false;
     }
 
     return true;
   };
 
-  const handleWithdrawClick = () => {
+  const handleWithdrawalClick = () => {
     if (!validateWithdrawal()) return;
     setShowConfirm(true);
   };
@@ -92,25 +86,16 @@ export function WithdrawCard() {
     setShowConfirm(false);
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
-      await withdrawFromCard(currentCard.id, parsedAmount);
+      await withdrawFromCard(currentCard.id, parseFloat(amount));
       await loadCards(true);
 
-      setSuccess(
-        `Successfully withdrew $${parsedAmount.toFixed(2)} from your card to your wallet.`
-      );
-
-      // Navigate back after a short delay
-      setTimeout(() => {
-        navigate('/cards');
-      }, 2000);
+      // Navigate back after success
+      navigate('/cards');
     } catch (err) {
       const message =
-        err instanceof Error
-          ? err.message
-          : 'Failed to process withdrawal. Please try again.';
+        err instanceof Error ? err.message : 'Failed to process withdrawal. Please try again.';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -121,12 +106,9 @@ export function WithdrawCard() {
     navigate('/cards');
   };
 
-  const handleSetMaxAmount = () => {
-    if (maxWithdrawable > 0) {
-      setAmount(maxWithdrawable.toFixed(2));
-      setError(null);
-    }
-  };
+  const parsedAmount = parseFloat(amount) || 0;
+  const exceedsBalance = currentCard ? parsedAmount > currentCard.balance : false;
+  const isButtonDisabled = !amount || parsedAmount <= 0 || isLoading;
 
   if (!currentCard) {
     return (
@@ -137,11 +119,8 @@ export function WithdrawCard() {
         </Button>
 
         <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-8 text-center">
-          <CreditCard className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h2 className="mb-2 text-lg font-semibold text-foreground">No Card Selected</h2>
-          <p className="text-sm text-muted-foreground">
-            Please select a card to proceed with withdrawal
-          </p>
+          <Loader2 className="mb-4 h-8 w-8 animate-spin text-kaviBlue" />
+          <p className="text-sm text-muted-foreground">Loading card...</p>
         </div>
       </div>
     );
@@ -157,17 +136,7 @@ export function WithdrawCard() {
         </Button>
 
         <h1 className="text-2xl font-bold text-foreground">Withdraw Funds</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Transfer funds from your card to your wallet
-        </p>
       </div>
-
-      {/* Success Message */}
-      {success && (
-        <div className="mb-6 rounded-xl bg-emerald-500/10 p-4 text-emerald-500">
-          <p className="text-sm">{success}</p>
-        </div>
-      )}
 
       {/* Error Message */}
       {error && (
@@ -177,140 +146,81 @@ export function WithdrawCard() {
       )}
 
       <div className="space-y-6">
-        {/* Card Balance */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-kaviBlue/10">
-              <CreditCard className="h-5 w-5 text-kaviBlue" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Available Balance
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                ${currentCard.balance.toFixed(2)}
-              </p>
-            </div>
-          </div>
-          <p className="font-mono text-sm text-muted-foreground">
+        {/* Balance Card */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <p className="mb-2 text-sm uppercase tracking-wider text-muted-foreground">
+            Available Balance
+          </p>
+          <p className="text-3xl font-extrabold text-foreground">
+            {formatCurrency(currentCard.balance, currentCard.currency)}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Card ending in •••• {currentCard.cardNumber.slice(-4)}
           </p>
         </div>
 
         {/* Amount Input */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Withdrawal Amount</h3>
-            {maxWithdrawable > 0 && (
-              <button
-                type="button"
-                onClick={handleSetMaxAmount}
-                className="text-sm font-medium text-kaviBlue hover:underline"
-              >
-                Max: ${maxWithdrawable.toFixed(2)}
-              </button>
+        <div className="space-y-3">
+          <h3 className="font-semibold text-foreground">Withdrawal Amount</h3>
+          <div
+            className={cn(
+              'flex items-center rounded-lg border bg-card px-4 py-3',
+              amount && 'border-kaviBlue border-2',
+              exceedsBalance && 'border-destructive border-2'
             )}
-          </div>
-          <AmountInput
-            value={amount}
-            onChange={(val) => {
-              setAmount(val);
-              setError(null);
-            }}
-            currency={currentCard.currency}
-            disabled={isLoading}
-            quickAmounts={[10, 25, 50, 100]}
-          />
-
-          {/* Balance After Withdrawal */}
-          {isValidAmount && !exceedsMaxWithdrawable && (
-            <div className="mt-4 rounded-xl bg-accent/50 p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Current Balance</span>
-                <span className="font-medium text-foreground">
-                  ${currentCard.balance.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Withdrawal</span>
-                <span className="font-medium text-foreground">
-                  -${parsedAmount.toFixed(2)}
-                </span>
-              </div>
-              <div className="mt-2 border-t border-border pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">Remaining Balance</span>
-                  <span className="text-lg font-bold text-kaviBlue">
-                    ${(currentCard.balance - parsedAmount).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Exceeds Balance Warning */}
-          {exceedsBalance && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-destructive">
-              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm">Amount exceeds available balance</span>
-            </div>
-          )}
-
-          {/* Exceeds Max Withdrawable Warning */}
-          {!exceedsBalance && exceedsMaxWithdrawable && parsedAmount > 0 && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-amber-500/10 p-3 text-amber-600">
-              <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm">
-                Maximum withdrawal is ${maxWithdrawable.toFixed(2)}. A minimum balance of
-                ${MINIMUM_CARD_BALANCE.toFixed(2)} must remain.
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Destination Info */}
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-              <Wallet className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Destination
-              </p>
-              <p className="font-semibold text-foreground">Your Wallet Balance</p>
-            </div>
+          >
+            <span className="mr-2 text-2xl font-semibold text-foreground">{currencySymbol}</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              placeholder="0.00"
+              disabled={isLoading}
+              maxLength={10}
+              className="flex-1 bg-transparent py-2 text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
         {/* Info Card */}
-        <div className="rounded-xl border border-kaviBlue/20 bg-kaviBlue/5 p-4">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 flex-shrink-0 text-kaviBlue" />
-            <p className="text-sm text-muted-foreground">
-              Funds will be transferred to your wallet balance instantly. No additional
-              fees apply for withdrawals.
+        <div className="flex items-start gap-3 rounded-lg bg-kaviBlue/10 p-4">
+          <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-kaviBlue" />
+          <div>
+            <p className="font-semibold text-kaviBlue">Withdrawal Information</p>
+            <p className="mt-1 text-sm text-foreground">
+              Funds will be transferred to your {isNaira ? 'Naira' : 'Dollar'} wallet instantly. No
+              additional fees apply.
             </p>
           </div>
         </div>
+
+        {/* Error Message - Amount exceeds balance */}
+        {exceedsBalance && (
+          <div className="flex items-center gap-3 rounded-lg bg-destructive/10 p-4">
+            <AlertCircle className="h-5 w-5 flex-shrink-0 text-destructive" />
+            <p className="text-sm text-destructive">Amount exceeds available balance</p>
+          </div>
+        )}
 
         {/* Withdraw Button */}
         <Button
           type="button"
           size="lg"
-          onClick={handleWithdrawClick}
-          disabled={
-            !isValidAmount || exceedsBalance || exceedsMaxWithdrawable || isLoading
-          }
-          className={cn('w-full gap-2', isLoading && 'cursor-not-allowed')}
+          onClick={handleWithdrawalClick}
+          disabled={isButtonDisabled || exceedsBalance}
+          className={cn(
+            'w-full gap-2 shadow-lg',
+            isLoading && 'cursor-not-allowed'
+          )}
         >
           {isLoading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Processing...
-            </>
+            <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            `Withdraw${isValidAmount ? ` $${parsedAmount.toFixed(2)}` : ''}`
+            <>
+              <ArrowDownCircle className="h-5 w-5" />
+              Withdraw Funds
+            </>
           )}
         </Button>
       </div>
@@ -323,7 +233,7 @@ export function WithdrawCard() {
             <p className="mb-6 text-muted-foreground">
               Are you sure you want to withdraw{' '}
               <span className="font-semibold text-foreground">
-                ${parsedAmount.toFixed(2)}
+                {formatCurrency(parsedAmount, currentCard.currency)}
               </span>{' '}
               from your card?
             </p>
@@ -332,25 +242,23 @@ export function WithdrawCard() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Amount</span>
                 <span className="font-semibold text-foreground">
-                  ${parsedAmount.toFixed(2)}
+                  {formatCurrency(parsedAmount, currentCard.currency)}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">To</span>
-                <span className="font-semibold text-foreground">Wallet Balance</span>
+                <span className="font-semibold text-foreground">
+                  {isNaira ? 'Naira' : 'Dollar'} Wallet
+                </span>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowConfirm(false)}
-              >
+              <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
                 Cancel
               </Button>
               <Button className="flex-1" onClick={handleConfirmWithdraw}>
-                Confirm
+                Withdraw
               </Button>
             </div>
           </div>

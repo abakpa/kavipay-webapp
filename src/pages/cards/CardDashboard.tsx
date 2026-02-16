@@ -153,6 +153,12 @@ export function CardDashboard() {
     }
   };
 
+  const handleWithdraw = () => {
+    if (selectedCard) {
+      navigate(`/cards/${selectedCard.id}/withdraw`);
+    }
+  };
+
   const handleSettings = () => {
     if (selectedCard) {
       navigate(`/cards/${selectedCard.id}/settings`);
@@ -311,6 +317,7 @@ export function CardDashboard() {
               onFreezeCard={handleFreezeUnfreeze}
               onNavigateToSettings={handleSettings}
               onNavigateToTopup={handleTopup}
+              onNavigateToWithdraw={handleWithdraw}
             />
           )}
 

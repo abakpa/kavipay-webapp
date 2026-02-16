@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Snowflake, Settings, ArrowBigUp, Trash2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Snowflake, Settings, ArrowBigUp, ArrowDownToLine, Trash2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VirtualCard } from '@/types/card';
 import { CardStatus } from '@/types/card';
@@ -14,6 +14,7 @@ interface CardActionsProps {
   onDeleteCard?: () => void;
   onNavigateToSettings: () => void;
   onNavigateToTopup: () => void;
+  onNavigateToWithdraw: () => void;
 }
 
 interface ActionButtonProps {
@@ -69,6 +70,7 @@ export function CardActions({
   onDeleteCard,
   onNavigateToSettings,
   onNavigateToTopup,
+  onNavigateToWithdraw,
 }: CardActionsProps) {
   const isCardCurrentlyFrozen =
     card.status === CardStatus.FROZEN || card.status === CardStatus.INACTIVE;
@@ -113,55 +115,59 @@ export function CardActions({
     );
   }
 
-  // Active card actions - show all buttons
+  // Active card actions - matching mobile layout: Show, Topup, Withdraw, Settings
   return (
     <div className="mt-4">
       {/* Action Buttons Row */}
-      <div className="flex justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12">
-        <ActionButton
-          onClick={onToggleVisibility}
-          disabled={isRevealingCard}
-          isLoading={isRevealingCard}
-          icon={
-            showSensitiveData ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )
-          }
-        />
-        <ActionButton
-          onClick={onFreezeCard}
-          disabled={isOperationInProgress}
-          isLoading={isFreezingCard}
-          icon={<Snowflake className="h-5 w-5" />}
-        />
-        <ActionButton
-          onClick={onNavigateToSettings}
-          disabled={isOperationInProgress}
-          icon={<Settings className="h-5 w-5" />}
-        />
-        <ActionButton
-          onClick={onNavigateToTopup}
-          disabled={isOperationInProgress}
-          icon={<ArrowBigUp className="h-5 w-5" />}
-        />
-      </div>
+      <div className="flex justify-center gap-6">
+        {/* Show/Hide */}
+        <div className="flex flex-col items-center">
+          <ActionButton
+            onClick={onToggleVisibility}
+            disabled={isRevealingCard}
+            isLoading={isRevealingCard}
+            icon={
+              showSensitiveData ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )
+            }
+          />
+          <span className="mt-2 text-xs text-muted-foreground">
+            {isRevealingCard ? 'Loading...' : showSensitiveData ? 'Hide' : 'Show'}
+          </span>
+        </div>
 
-      {/* Labels Row */}
-      <div className="mt-3 flex justify-center gap-6 sm:gap-8 md:gap-10 lg:gap-12">
-        <span className="w-[60px] text-center text-xs text-muted-foreground">
-          {isRevealingCard ? 'Loading...' : showSensitiveData ? 'Hide' : 'Show'}
-        </span>
-        <span className="w-[60px] text-center text-xs text-muted-foreground">
-          {isFreezingCard ? 'Processing...' : 'Freeze'}
-        </span>
-        <span className="w-[60px] text-center text-xs text-muted-foreground">
-          Settings
-        </span>
-        <span className="w-[60px] text-center text-xs text-muted-foreground">
-          Topup
-        </span>
+        {/* Topup */}
+        <div className="flex flex-col items-center">
+          <ActionButton
+            onClick={onNavigateToTopup}
+            disabled={isOperationInProgress}
+            icon={<ArrowBigUp className="h-5 w-5" />}
+          />
+          <span className="mt-2 text-xs text-muted-foreground">Topup</span>
+        </div>
+
+        {/* Withdraw */}
+        <div className="flex flex-col items-center">
+          <ActionButton
+            onClick={onNavigateToWithdraw}
+            disabled={isOperationInProgress}
+            icon={<ArrowDownToLine className="h-5 w-5" />}
+          />
+          <span className="mt-2 text-xs text-muted-foreground">Withdraw</span>
+        </div>
+
+        {/* Settings */}
+        <div className="flex flex-col items-center">
+          <ActionButton
+            onClick={onNavigateToSettings}
+            disabled={isOperationInProgress}
+            icon={<Settings className="h-5 w-5" />}
+          />
+          <span className="mt-2 text-xs text-muted-foreground">Settings</span>
+        </div>
       </div>
     </div>
   );

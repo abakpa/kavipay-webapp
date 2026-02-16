@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { ServiceCard, WalletBalanceCard } from '@/components/utilities';
+import { ServiceCard } from '@/components/utilities';
+import { WalletBalanceHeader } from '@/components/wallet/WalletBalanceHeader';
 import { UtilityServices } from '@/constants/utilities';
-import { useAuth } from '@/contexts/AuthContext';
 import type { UtilityService } from '@/types/utilities';
 
 export function UtilitiesHome() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const handleServiceClick = (service: UtilityService) => {
     navigate(service.route);
@@ -23,10 +22,7 @@ export function UtilitiesHome() {
       </div>
 
       {/* Wallet Balance */}
-      <WalletBalanceCard
-        balance={user?.gameWalletBalance ?? 0}
-        currency="USDT"
-      />
+      <WalletBalanceHeader />
 
       {/* Services Grid */}
       <div className="space-y-3">
