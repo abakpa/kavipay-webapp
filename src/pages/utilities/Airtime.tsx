@@ -10,6 +10,7 @@ import {
   TransactionSummary,
   StepIndicator,
 } from '@/components/utilities';
+import type { CryptoSelection, WalletCurrency } from '@/components/utilities/PaymentMethodSelector';
 import { NetworkProviders, MinimumAmounts, ValidationPatterns } from '@/constants/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
@@ -27,10 +28,13 @@ export function Airtime() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [cryptoSelection, setCryptoSelection] = useState<CryptoSelection | null>(null);
+  const [walletCurrency, setWalletCurrency] = useState<WalletCurrency | null>(null);
   const [phoneError, setPhoneError] = useState('');
   const [amountError, setAmountError] = useState('');
 
-  const walletBalance = user?.gameWalletBalance ?? 0;
+  const dollarBalance = user?.dollarBalance ?? 0;
+  const nairaBalance = user?.nairaBalance ?? 0;
   const numericAmount = parseInt(amount, 10) || 0;
 
   const validateStep1 = (): boolean => {
@@ -63,7 +67,8 @@ export function Airtime() {
         setCurrentStep(1);
       }
     } else if (currentStep === 1) {
-      if (paymentMethod) {
+      // For wallet, require wallet currency selection; for crypto, require crypto selection
+      if ((paymentMethod === 'wallet' && walletCurrency) || (paymentMethod === 'crypto' && cryptoSelection)) {
         setCurrentStep(2);
       }
     }
@@ -85,6 +90,13 @@ export function Airtime() {
       phoneNumber,
       amountInNaira: numericAmount,
       paymentMethod,
+      ...(paymentMethod === 'crypto' && cryptoSelection && {
+        token: cryptoSelection.currency,
+        cryptoNetwork: cryptoSelection.network,
+      }),
+      ...(paymentMethod === 'wallet' && walletCurrency && {
+        paymentCurrency: walletCurrency,
+      }),
     });
 
     if (result.success) {
@@ -111,13 +123,30 @@ export function Airtime() {
     }
   };
 
-  const getSummaryItems = () => [
-    { label: 'Network', value: selectedProvider?.name || '-' },
-    { label: 'Phone Number', value: phoneNumber || '-' },
-    { label: 'Amount', value: `₦${numericAmount.toLocaleString()}` },
-    { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
-    { label: 'Total', value: `₦${numericAmount.toLocaleString()}`, highlight: true },
-  ];
+  const getSummaryItems = () => {
+    const items = [
+      { label: 'Network', value: selectedProvider?.name || '-' },
+      { label: 'Phone Number', value: phoneNumber || '-' },
+      { label: 'Amount', value: `₦${numericAmount.toLocaleString()}` },
+      { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
+    ];
+
+    if (paymentMethod === 'wallet' && walletCurrency) {
+      items.push({ label: 'Wallet', value: `${walletCurrency} Wallet` });
+    }
+
+    if (paymentMethod === 'crypto' && cryptoSelection) {
+      items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
+    }
+
+    items.push({ label: 'Total', value: `₦${numericAmount.toLocaleString()}`, highlight: true });
+    return items;
+  };
+
+  // Check if payment selection is complete
+  const isPaymentSelectionComplete =
+    (paymentMethod === 'wallet' && walletCurrency) ||
+    (paymentMethod === 'crypto' && cryptoSelection);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -177,8 +206,13 @@ export function Airtime() {
           <PaymentMethodSelector
             selectedMethod={paymentMethod}
             onSelect={setPaymentMethod}
-            walletBalance={walletBalance}
-            requiredAmount={numericAmount / 1500} // Approximate USD conversion
+            dollarBalance={dollarBalance}
+            nairaBalance={nairaBalance}
+            amountInNaira={numericAmount}
+            selectedCrypto={cryptoSelection}
+            onCryptoSelect={setCryptoSelection}
+            selectedWalletCurrency={walletCurrency}
+            onWalletCurrencySelect={setWalletCurrency}
           />
         )}
 
@@ -211,7 +245,7 @@ export function Airtime() {
           disabled={
             isLoading ||
             (currentStep === 0 && (!selectedProvider || !phoneNumber || !amount)) ||
-            (currentStep === 1 && !paymentMethod)
+            (currentStep === 1 && !isPaymentSelectionComplete)
           }
           className="flex-1"
         >

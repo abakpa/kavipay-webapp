@@ -309,8 +309,8 @@ export function Settings() {
           {/* Contact Support Card */}
           <Card>
             <CardContent className="p-0">
-              <a
-                href="mailto:support@kavipay.com"
+              <Link
+                to="/contact-support"
                 className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -325,7 +325,7 @@ export function Settings() {
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </a>
+              </Link>
             </CardContent>
           </Card>
 
@@ -355,10 +355,8 @@ export function Settings() {
           {/* About KaviPay Card */}
           <Card>
             <CardContent className="p-0">
-              <a
-                href="https://kavipay.com/about"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/about"
                 className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -373,7 +371,7 @@ export function Settings() {
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </a>
+              </Link>
             </CardContent>
           </Card>
 

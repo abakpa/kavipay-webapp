@@ -10,6 +10,7 @@ import {
   TransactionSummary,
   StepIndicator,
 } from '@/components/utilities';
+import type { CryptoSelection, WalletCurrency } from '@/components/utilities/PaymentMethodSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
 import { ValidationPatterns, TvProviders as DefaultTvProviders } from '@/constants/utilities';
@@ -39,12 +40,20 @@ export function TV() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<TvPackage | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [cryptoSelection, setCryptoSelection] = useState<CryptoSelection | null>(null);
+  const [walletCurrency, setWalletCurrency] = useState<WalletCurrency | null>(null);
   const [cardError, setCardError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isLoadingPackages, setIsLoadingPackages] = useState(false);
 
-  const walletBalance = user?.gameWalletBalance ?? 0;
+  const dollarBalance = user?.dollarBalance ?? 0;
+  const nairaBalance = user?.nairaBalance ?? 0;
+
+  // Check if payment selection is complete
+  const isPaymentSelectionComplete =
+    (paymentMethod === 'wallet' && walletCurrency) ||
+    (paymentMethod === 'crypto' && cryptoSelection);
 
   // Use hardcoded providers as fallback, or API providers if available
   const availableProviders = tvProviders.length > 0 ? tvProviders : DefaultTvProviders;
@@ -105,7 +114,8 @@ export function TV() {
         setCurrentStep(3);
       }
     } else if (currentStep === 3) {
-      if (paymentMethod) {
+      // For wallet, require wallet currency selection; for crypto, require crypto selection
+      if ((paymentMethod === 'wallet' && walletCurrency) || (paymentMethod === 'crypto' && cryptoSelection)) {
         setCurrentStep(4);
       }
     }
@@ -132,6 +142,13 @@ export function TV() {
       variationCode: selectedPackage.variationCode,
       phoneNumber,
       paymentMethod,
+      ...(paymentMethod === 'crypto' && cryptoSelection && {
+        token: cryptoSelection.currency,
+        cryptoNetwork: cryptoSelection.network,
+      }),
+      ...(paymentMethod === 'wallet' && walletCurrency && {
+        paymentCurrency: walletCurrency,
+      }),
     });
 
     if (result.success) {
@@ -160,16 +177,28 @@ export function TV() {
     }
   };
 
-  const getSummaryItems = () => [
-    { label: 'Provider', value: selectedProvider?.name || '-' },
-    { label: 'Smart Card', value: smartCardNumber || '-' },
-    { label: 'Customer Name', value: smartCardVerification?.customerName || '-' },
-    { label: 'Current Package', value: smartCardVerification?.currentPackage || '-' },
-    { label: 'New Package', value: selectedPackage?.name || '-' },
-    { label: 'Phone Number', value: phoneNumber || '-' },
-    { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
-    { label: 'Total', value: `₦${(selectedPackage?.amount || 0).toLocaleString()}`, highlight: true },
-  ];
+  const getSummaryItems = () => {
+    const items = [
+      { label: 'Provider', value: selectedProvider?.name || '-' },
+      { label: 'Smart Card', value: smartCardNumber || '-' },
+      { label: 'Customer Name', value: smartCardVerification?.customerName || '-' },
+      { label: 'Current Package', value: smartCardVerification?.currentPackage || '-' },
+      { label: 'New Package', value: selectedPackage?.name || '-' },
+      { label: 'Phone Number', value: phoneNumber || '-' },
+      { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
+    ];
+
+    if (paymentMethod === 'wallet' && walletCurrency) {
+      items.push({ label: 'Wallet', value: `${walletCurrency} Wallet` });
+    }
+
+    if (paymentMethod === 'crypto' && cryptoSelection) {
+      items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
+    }
+
+    items.push({ label: 'Total', value: `₦${(selectedPackage?.amount || 0).toLocaleString()}`, highlight: true });
+    return items;
+  };
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -280,8 +309,13 @@ export function TV() {
           <PaymentMethodSelector
             selectedMethod={paymentMethod}
             onSelect={setPaymentMethod}
-            walletBalance={walletBalance}
-            requiredAmount={(selectedPackage?.amount || 0) / 1500}
+            dollarBalance={dollarBalance}
+            nairaBalance={nairaBalance}
+            amountInNaira={selectedPackage?.amount || 0}
+            selectedCrypto={cryptoSelection}
+            onCryptoSelect={setCryptoSelection}
+            selectedWalletCurrency={walletCurrency}
+            onWalletCurrencySelect={setWalletCurrency}
           />
         )}
 
@@ -317,7 +351,7 @@ export function TV() {
               isLoadingPackages ||
               (currentStep === 0 && !selectedProvider) ||
               (currentStep === 2 && !selectedPackage) ||
-              (currentStep === 3 && !paymentMethod)
+              (currentStep === 3 && !isPaymentSelectionComplete)
             }
             className="flex-1"
           >

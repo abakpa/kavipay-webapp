@@ -10,6 +10,7 @@ import {
   TransactionSummary,
   StepIndicator,
 } from '@/components/utilities';
+import type { CryptoSelection, WalletCurrency } from '@/components/utilities/PaymentMethodSelector';
 import { ElectricityProviders, MinimumAmounts, ValidationPatterns } from '@/constants/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
@@ -32,12 +33,15 @@ export function Electricity() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [cryptoSelection, setCryptoSelection] = useState<CryptoSelection | null>(null);
+  const [walletCurrency, setWalletCurrency] = useState<WalletCurrency | null>(null);
   const [meterError, setMeterError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [amountError, setAmountError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const walletBalance = user?.gameWalletBalance ?? 0;
+  const dollarBalance = user?.dollarBalance ?? 0;
+  const nairaBalance = user?.nairaBalance ?? 0;
   const numericAmount = parseInt(amount, 10) || 0;
 
   const handleVerifyMeter = async () => {
@@ -97,7 +101,8 @@ export function Electricity() {
         setCurrentStep(3);
       }
     } else if (currentStep === 3) {
-      if (paymentMethod) {
+      // For wallet, require wallet currency selection; for crypto, require crypto selection
+      if ((paymentMethod === 'wallet' && walletCurrency) || (paymentMethod === 'crypto' && cryptoSelection)) {
         setCurrentStep(4);
       }
     }
@@ -124,6 +129,13 @@ export function Electricity() {
       serviceType: meterType,
       phoneNumber,
       paymentMethod,
+      ...(paymentMethod === 'crypto' && cryptoSelection && {
+        token: cryptoSelection.currency,
+        cryptoNetwork: cryptoSelection.network,
+      }),
+      ...(paymentMethod === 'wallet' && walletCurrency && {
+        paymentCurrency: walletCurrency,
+      }),
     });
 
     if (result.success) {
@@ -152,15 +164,32 @@ export function Electricity() {
     }
   };
 
-  const getSummaryItems = () => [
-    { label: 'Provider', value: selectedProvider?.shortName || '-' },
-    { label: 'Meter Number', value: meterNumber || '-' },
-    { label: 'Meter Type', value: meterType === 'prepaid' ? 'Prepaid' : 'Postpaid' },
-    { label: 'Customer Name', value: meterVerification?.customerName || '-' },
-    { label: 'Phone Number', value: phoneNumber || '-' },
-    { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
-    { label: 'Total', value: `₦${numericAmount.toLocaleString()}`, highlight: true },
-  ];
+  const getSummaryItems = () => {
+    const items = [
+      { label: 'Provider', value: selectedProvider?.shortName || '-' },
+      { label: 'Meter Number', value: meterNumber || '-' },
+      { label: 'Meter Type', value: meterType === 'prepaid' ? 'Prepaid' : 'Postpaid' },
+      { label: 'Customer Name', value: meterVerification?.customerName || '-' },
+      { label: 'Phone Number', value: phoneNumber || '-' },
+      { label: 'Payment Method', value: paymentMethod === 'wallet' ? 'Wallet' : 'Crypto' },
+    ];
+
+    if (paymentMethod === 'wallet' && walletCurrency) {
+      items.push({ label: 'Wallet', value: `${walletCurrency} Wallet` });
+    }
+
+    if (paymentMethod === 'crypto' && cryptoSelection) {
+      items.push({ label: 'Crypto', value: `${cryptoSelection.currency.toUpperCase()} (${cryptoSelection.networkName})` });
+    }
+
+    items.push({ label: 'Total', value: `₦${numericAmount.toLocaleString()}`, highlight: true });
+    return items;
+  };
+
+  // Check if payment selection is complete
+  const isPaymentSelectionComplete =
+    (paymentMethod === 'wallet' && walletCurrency) ||
+    (paymentMethod === 'crypto' && cryptoSelection);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -297,8 +326,13 @@ export function Electricity() {
           <PaymentMethodSelector
             selectedMethod={paymentMethod}
             onSelect={setPaymentMethod}
-            walletBalance={walletBalance}
-            requiredAmount={numericAmount / 1500}
+            dollarBalance={dollarBalance}
+            nairaBalance={nairaBalance}
+            amountInNaira={numericAmount}
+            selectedCrypto={cryptoSelection}
+            onCryptoSelect={setCryptoSelection}
+            selectedWalletCurrency={walletCurrency}
+            onWalletCurrencySelect={setWalletCurrency}
           />
         )}
 
@@ -333,7 +367,7 @@ export function Electricity() {
               isLoading ||
               (currentStep === 0 && !selectedProvider) ||
               (currentStep === 2 && (!phoneNumber || !amount)) ||
-              (currentStep === 3 && !paymentMethod)
+              (currentStep === 3 && !isPaymentSelectionComplete)
             }
             className="flex-1"
           >

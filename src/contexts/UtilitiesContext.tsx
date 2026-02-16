@@ -44,6 +44,9 @@ interface UtilitiesContextType {
     phoneNumber: string;
     amountInNaira: number;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => Promise<{ success: boolean; message: string; transactionId?: string }>;
 
   // Data Actions
@@ -54,6 +57,9 @@ interface UtilitiesContextType {
     network: string;
     variationCode: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => Promise<{ success: boolean; message: string; transactionId?: string }>;
 
   // Electricity Actions
@@ -69,6 +75,9 @@ interface UtilitiesContextType {
     serviceType: string;
     phoneNumber: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => Promise<{
     success: boolean;
     message: string;
@@ -91,6 +100,9 @@ interface UtilitiesContextType {
     variationCode: string;
     phoneNumber: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => Promise<{ success: boolean; message: string; transactionId?: string }>;
   clearSmartCardVerification: () => void;
 
@@ -166,6 +178,9 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     phoneNumber: string;
     amountInNaira: number;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => {
     setIsLoading(true);
     setError(null);
@@ -174,10 +189,11 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
       const response = await utilitiesApi.buyAirtime({
         network: data.network,
         phoneNumber: data.phoneNumber,
-        amountInNaira: data.amountInNaira,
-        currencyNetwork: 'base',
-        currency: 'ETH',
+        amountInNaira: data.amountInNaira * 100, // Convert to kobo
+        currencyNetwork: data.cryptoNetwork || 'base',
+        currency: data.token || 'ETH',
         paymentMethod: data.paymentMethod,
+        paymentCurrency: data.paymentCurrency,
       });
 
       if (response.success) {
@@ -228,6 +244,9 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     network: string;
     variationCode: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => {
     setIsLoading(true);
     setError(null);
@@ -235,11 +254,12 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     try {
       const response = await utilitiesApi.buyData({
         phoneNumber: data.phoneNumber,
-        amountInNaira: data.amountInNaira,
+        amountInNaira: data.amountInNaira * 100, // Convert to kobo
         network: data.network,
         variationCode: data.variationCode,
-        currency: 'ETH',
+        currency: data.token || 'ETH',
         paymentMethod: data.paymentMethod,
+        paymentCurrency: data.paymentCurrency,
       });
 
       if (response.success) {
@@ -294,6 +314,9 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     serviceType: string;
     phoneNumber: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => {
     setIsLoading(true);
     setError(null);
@@ -301,12 +324,13 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     try {
       const response = await utilitiesApi.buyPower({
         meterNumber: data.meterNumber,
-        amountInNaira: data.amountInNaira,
+        amountInNaira: data.amountInNaira * 100, // Convert to kobo
         serviceId: data.serviceId,
         serviceType: data.serviceType,
-        currency: 'ETH',
+        currency: data.token || 'ETH',
         paymentMethod: data.paymentMethod,
         phoneNumber: data.phoneNumber,
+        paymentCurrency: data.paymentCurrency,
       });
 
       if (response.success) {
@@ -409,6 +433,9 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     variationCode: string;
     phoneNumber: string;
     paymentMethod: string;
+    token?: string;
+    cryptoNetwork?: string;
+    paymentCurrency?: 'USD' | 'NGN';
   }) => {
     setIsLoading(true);
     setError(null);
@@ -416,12 +443,13 @@ export function UtilitiesProvider({ children }: UtilitiesProviderProps) {
     try {
       const response = await utilitiesApi.subscribeTv({
         cardNumber: data.cardNumber,
-        amountInNaira: data.amountInNaira,
+        amountInNaira: data.amountInNaira * 100, // Convert to kobo
         serviceId: data.serviceId,
         variationCode: data.variationCode,
         phoneNumber: data.phoneNumber,
-        currency: 'ETH',
+        currency: data.token || 'ETH',
         paymentMethod: data.paymentMethod,
+        paymentCurrency: data.paymentCurrency,
       });
 
       if (response.success) {
