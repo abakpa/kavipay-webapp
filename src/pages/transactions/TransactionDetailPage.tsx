@@ -20,7 +20,6 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  ArrowRight,
 } from 'lucide-react';
 import { getWalletTransactionById } from '@/lib/api/wallet';
 import type { WalletTransaction, WalletTransactionType, WalletTransactionStatus } from '@/types/wallet';
@@ -279,35 +278,6 @@ export function TransactionDetailPage() {
               <span className="font-medium text-foreground">{transaction.currency}</span>
             </div>
 
-            {/* Description */}
-            {transaction.description && (
-              <div className="flex items-center justify-between px-6 py-4">
-                <span className="text-sm text-muted-foreground">Description</span>
-                <span className="font-medium text-foreground">{transaction.description}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Balance Change Card */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-6 py-3">
-            <p className="text-sm font-medium text-muted-foreground">Balance Change</p>
-          </div>
-          <div className="flex items-center justify-center gap-4 px-6 py-6">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Before</p>
-              <p className="text-lg font-semibold text-foreground">
-                {formatAmount(transaction.balanceBefore, transaction.currency)}
-              </p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">After</p>
-              <p className="text-lg font-semibold text-foreground">
-                {formatAmount(transaction.balanceAfter, transaction.currency)}
-              </p>
-            </div>
           </div>
         </div>
 
