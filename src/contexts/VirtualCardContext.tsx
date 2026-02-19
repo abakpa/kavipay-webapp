@@ -221,6 +221,8 @@ interface VirtualCardContextType extends VirtualCardState {
     cardNickname?: string;
   }) => Promise<CardPreOrder>;
   processPreOrder: (preOrderId: string, bvn?: string) => Promise<VirtualCard>;
+  syncPreOrder: (preOrderId: string) => Promise<VirtualCard>;
+  requestRefund: (preOrderId: string) => Promise<{ refundAmount: number }>;
 
   // Utility
   clearError: () => void;
@@ -533,6 +535,43 @@ export function VirtualCardProvider({ children }: VirtualCardProviderProps) {
     }
   }, []);
 
+  const syncPreOrder = useCallback(async (preOrderId: string) => {
+    dispatch({ type: 'SET_PROCESSING_PRE_ORDER', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
+
+    try {
+      const result = await cardApi.syncCardPreOrder(preOrderId);
+      dispatch({ type: 'UPDATE_PRE_ORDER', payload: result.preOrder });
+
+      // Reload cards to include the synced one
+      const cards = await cardApi.getVirtualCards(true);
+      dispatch({ type: 'SET_CARDS', payload: cards });
+      return result.card;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to sync pre-order';
+      dispatch({ type: 'SET_ERROR', payload: message });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_PROCESSING_PRE_ORDER', payload: false });
+    }
+  }, []);
+
+  const requestRefund = useCallback(async (preOrderId: string) => {
+    dispatch({ type: 'SET_ERROR', payload: null });
+
+    try {
+      const result = await cardApi.requestCardPreOrderRefund(preOrderId);
+      dispatch({ type: 'UPDATE_PRE_ORDER', payload: result.preOrder });
+      return { refundAmount: result.refundAmount };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to request refund';
+      dispatch({ type: 'SET_ERROR', payload: message });
+      throw error;
+    }
+  }, []);
+
   // Utility
   const clearError = useCallback(() => {
     dispatch({ type: 'SET_ERROR', payload: null });
@@ -598,6 +637,8 @@ export function VirtualCardProvider({ children }: VirtualCardProviderProps) {
     loadPreOrders,
     createPreOrder,
     processPreOrder,
+    syncPreOrder,
+    requestRefund,
     clearError,
     refreshAll,
     activeCards,
