@@ -367,7 +367,7 @@ export function CardPreOrderStatus() {
         return (
           <Button
             variant="secondary"
-            onClick={() => navigate('/contact-support')}
+            onClick={() => window.open('https://www.kavipay.io/help', '_blank')}
             className="w-full"
           >
             <HelpCircle className="mr-2 h-4 w-4" />

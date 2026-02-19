@@ -21,6 +21,7 @@ interface EditProfileModalProps {
 
 export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileModalProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -42,8 +43,11 @@ export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileM
         name: user.name,
         phoneNumber: user.phoneNumber || '',
       });
+      setError(null);
     }
-  }, [isOpen, user, reset]);
+    // Only reset when modal opens, not when user object reference changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Handle escape key
   useEffect(() => {
@@ -64,11 +68,19 @@ export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileM
 
   const handleFormSubmit = async (data: ProfileFormData) => {
     setIsSaving(true);
+    setError(null);
     try {
       const success = await onSave(data);
       if (success) {
         onClose();
+      } else {
+        setError('Failed to update profile. Please try again.');
       }
+    } catch (err) {
+      console.error('Profile save error:', err);
+      // Show the actual error message from the API
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -91,7 +103,10 @@ export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileM
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl mx-4">
+      <div
+        className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-foreground">Edit Profile</h2>
@@ -107,13 +122,6 @@ export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileM
         {/* Avatar Section */}
         <div className="flex flex-col items-center mb-6">
           <UserAvatar name={user.name} size="xl" />
-          <button
-            type="button"
-            className="mt-2 text-sm text-kaviBlue hover:underline"
-            disabled
-          >
-            Change photo (Coming soon)
-          </button>
         </div>
 
         {/* Form */}
@@ -163,6 +171,13 @@ export function EditProfileModal({ isOpen, onClose, onSave, user }: EditProfileM
               Used for account recovery and notifications
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
