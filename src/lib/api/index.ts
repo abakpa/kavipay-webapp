@@ -61,6 +61,9 @@ miningApi.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
     const miningToken = localStorage.getItem(MINING_JWT_TOKEN_KEY);
     if (miningToken) {
       config.headers.Authorization = `Bearer ${miningToken}`;
+      console.log(`[MiningAPI] Request to ${config.url} with token: ${miningToken.substring(0, 20)}...`);
+    } else {
+      console.warn(`[MiningAPI] No token found for request to ${config.url}`);
     }
   }
   return config;

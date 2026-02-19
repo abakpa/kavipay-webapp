@@ -196,7 +196,7 @@ export function CardEmptyState({
           <Button
             variant="ghost"
             className="mt-3"
-            onClick={() => window.open('mailto:support@kavipay.com?subject=Card%20Pre-Order%20Issue', '_blank')}
+            onClick={() => window.open('https://www.kavipay.io/help', '_blank')}
           >
             Contact Support
           </Button>

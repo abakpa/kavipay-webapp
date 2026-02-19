@@ -31,6 +31,7 @@ import {
   type MiningAuthResponse,
 } from '@/lib/api/auth';
 import { getMiningToken, clearMiningToken } from '@/lib/api';
+import { updateUserProfile } from '@/lib/api/profile';
 
 const USER_STORAGE_KEY = 'kavipay_user';
 const MINING_JWT_TOKEN_KEY = 'mining_jwt_token';
@@ -99,6 +100,7 @@ interface AuthContextType {
   isNewMiningUser: () => boolean;
   refreshUserData: () => Promise<void>;
   retryMiningAuthentication: () => Promise<void>;
+  updateUser: (userData: { name: string; phone?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -122,7 +124,8 @@ const convertFirebaseUser = (
 ): User => {
   return {
     id: firebaseUser.uid,
-    name: firebaseUser.displayName || 'User',
+    // Server returns 'username' field, not 'name'
+    name: miningData?.username || miningData?.name || firebaseUser.displayName || 'User',
     email: firebaseUser.email || '',
     phoneNumber: miningData?.phoneNumber,
     balance: miningData?.balance || 0,
@@ -287,9 +290,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedMiningData = await getUserById(user.userId);
       const updatedUser = convertFirebaseUser(firebaseUser, updatedMiningData);
 
+      // Preserve Firebase UID and email (these don't change)
       updatedUser.id = user.id;
-      updatedUser.name = user.name;
       updatedUser.email = user.email;
+      // Note: name comes from miningData via convertFirebaseUser, don't overwrite it
 
       updateUserStorage(updatedUser);
       setUser(updatedUser);
@@ -311,6 +315,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Update user profile - matches mobile app exactly
+  const updateUser = async (userData: { name: string; phone?: string }) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    // Verify we have a token before making the request
+    const token = localStorage.getItem('mining_jwt_token');
+    if (!token) {
+      console.error('[AuthContext] No mining token found - user may need to re-login');
+      throw new Error('Authentication required. Please log out and log in again.');
+    }
+
+    console.log('[AuthContext] Updating user profile:', userData);
+
+    try {
+      // Call API (throws on error, just like mobile)
+      const result = await updateUserProfile(userData);
+      console.log('[AuthContext] Profile update successful:', result);
+
+      // Update local state directly (don't refresh from server)
+      const updatedUser: User = {
+        ...user,
+        name: userData.name,
+        phoneNumber: userData.phone,
+      };
+
+      updateUserStorage(updatedUser);
+      setUser(updatedUser);
+      console.log('[AuthContext] Local state updated');
+    } catch (error) {
+      console.error('[AuthContext] Error updating user:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -328,6 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isNewMiningUser,
         refreshUserData,
         retryMiningAuthentication,
+        updateUser,
       }}
     >
       {children}

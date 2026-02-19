@@ -170,7 +170,7 @@ export function CardPreOrderHistory() {
       case PreOrderStatus.REFUND_ELIGIBLE:
       case PreOrderStatus.VERIFICATION_REJECTED:
       case PreOrderStatus.CREATION_FAILED:
-        navigate('/contact-support');
+        window.open('https://www.kavipay.io/help', '_blank');
         break;
       case PreOrderStatus.KYC_APPROVED:
         try {

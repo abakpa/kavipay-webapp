@@ -41,7 +41,6 @@ import { Referral } from '@/pages/referral/Referral';
 // Profile
 import { Profile } from '@/pages/profile/Profile';
 import { Settings } from '@/pages/profile/Settings';
-import { ContactSupport } from '@/pages/profile/ContactSupport';
 import { AboutKavipay } from '@/pages/profile/AboutKavipay';
 import { Legal } from '@/pages/profile/Legal';
 
@@ -108,7 +107,6 @@ export const router = createBrowserRouter([
       // Profile & Settings
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
-      { path: 'contact-support', element: <ContactSupport /> },
       { path: 'about', element: <AboutKavipay /> },
       { path: 'legal', element: <Legal /> },
 

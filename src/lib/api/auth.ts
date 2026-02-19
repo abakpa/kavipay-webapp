@@ -4,6 +4,7 @@ import { miningApi, API_BASE_URL, MINING_JWT_TOKEN_KEY } from './index';
 // Types
 export interface MiningUserData {
   id?: string;
+  name?: string;
   odessaId?: string;
   odessa_id?: string;
   odessa_email?: string;
