@@ -11,6 +11,7 @@ import {
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { CardList, BVNInputModal, SpendingAnalytics, CardActions } from '@/components/cards';
+import { PreOrderBanner } from '@/components/cards/PreOrderBanner';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ export function CardDashboard() {
     error,
     clearError,
     pendingPreOrders,
+    preOrders,
     freezeCard,
     unfreezeCard,
     loadCards,
@@ -273,6 +275,9 @@ export function CardDashboard() {
           <p className="text-sm">{error}</p>
         </div>
       )}
+
+      {/* Pre-Order Status Banner */}
+      <PreOrderBanner preOrders={preOrders} />
 
       {/* BVN Input Modal */}
       <BVNInputModal

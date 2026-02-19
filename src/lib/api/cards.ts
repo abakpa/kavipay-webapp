@@ -15,6 +15,8 @@ import type {
   VirtualCard,
   CardTransaction,
   CardPreOrder,
+  CardDelivery,
+  CreateDeliveryRequest,
 } from '../../types/card';
 
 // Internal types for API responses
@@ -595,6 +597,130 @@ export const processCardPreOrder = async (
       enhancedError.isUserError = true;
       enhancedError.statusCode = status;
       enhancedError.details = { code: errorCode, ...errorData };
+      throw enhancedError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Sync a pre-order that may be stuck in processing state.
+ */
+export const syncCardPreOrder = async (
+  preOrderId: string
+): Promise<{
+  message: string;
+  card: VirtualCard;
+  preOrder: CardPreOrder;
+  provider: string;
+}> => {
+  try {
+    const response = await api.post(`/cards/pre-orders/${preOrderId}/sync`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const errorData = error.response.data as ApiErrorResponse;
+      const errorMessage = errorData?.message || errorData?.error || 'Failed to sync card';
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = error.response.status;
+      throw enhancedError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Request a refund for a failed or cancelled pre-order.
+ */
+export const requestCardPreOrderRefund = async (
+  preOrderId: string
+): Promise<{
+  message: string;
+  refundAmount: number;
+  preOrder: CardPreOrder;
+}> => {
+  try {
+    const response = await api.post(`/cards/pre-orders/${preOrderId}/request-refund`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const errorData = error.response.data as ApiErrorResponse;
+      const errorMessage = errorData?.message || errorData?.error || 'Failed to request refund';
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = error.response.status;
+      throw enhancedError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Create a delivery order for a physical card.
+ */
+export const createDeliveryOrder = async (
+  preOrderId: string,
+  data: CreateDeliveryRequest
+): Promise<{ message: string; delivery: CardDelivery }> => {
+  try {
+    const response = await api.post(`/preorders/${preOrderId}/delivery`, data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const errorData = error.response.data as ApiErrorResponse;
+      const errorMessage = errorData?.message || errorData?.error || 'Failed to create delivery order';
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = error.response.status;
+      throw enhancedError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Get the delivery status for a pre-order.
+ */
+export const getDeliveryStatus = async (
+  preOrderId: string
+): Promise<{ delivery: CardDelivery }> => {
+  try {
+    const response = await api.get(`/preorders/${preOrderId}/delivery`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      // Return null delivery if not found (404)
+      if (error.response.status === 404) {
+        return { delivery: null as unknown as CardDelivery };
+      }
+      const errorData = error.response.data as ApiErrorResponse;
+      const errorMessage = errorData?.message || errorData?.error || 'Failed to get delivery status';
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = error.response.status;
+      throw enhancedError;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Refresh tracking information from the courier.
+ */
+export const refreshDeliveryTracking = async (
+  preOrderId: string
+): Promise<{ delivery: CardDelivery }> => {
+  try {
+    const response = await api.post(`/preorders/${preOrderId}/delivery/refresh`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const errorData = error.response.data as ApiErrorResponse;
+      const errorMessage = errorData?.message || errorData?.error || 'Failed to refresh tracking';
+      const enhancedError = new Error(errorMessage) as EnhancedError;
+      enhancedError.isUserError = true;
+      enhancedError.statusCode = error.response.status;
       throw enhancedError;
     }
     throw error;
