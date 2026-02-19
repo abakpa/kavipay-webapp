@@ -92,4 +92,33 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 export const NOTIFICATION_STORAGE_KEYS = {
   PREFERENCES: 'kavipay_notification_preferences',
   HISTORY: 'kavipay_notification_history',
+  DISMISSED_ANNOUNCEMENTS: 'kavipay_dismissed_announcements',
 } as const;
+
+// System Announcement Types
+export type AnnouncementType = 'maintenance' | 'disruption' | 'feature' | 'terms' | 'update' | 'info';
+export type AnnouncementPriority = 'low' | 'normal' | 'high';
+
+export interface SystemAnnouncement {
+  id: string;
+  type: AnnouncementType;
+  title: string;
+  message: string;
+  priority: AnnouncementPriority;
+  startTime: string;
+  endTime?: string;
+  dismissible: boolean;
+  actionUrl?: string;
+  dismissed?: boolean;
+  createdAt: string;
+}
+
+// Announcement type styling
+export const ANNOUNCEMENT_STYLES: Record<AnnouncementType, { color: string; bgColor: string; icon: string }> = {
+  maintenance: { color: '#F59E0B', bgColor: 'bg-amber-500/10', icon: 'Wrench' },
+  disruption: { color: '#EF4444', bgColor: 'bg-red-500/10', icon: 'AlertTriangle' },
+  feature: { color: '#10B981', bgColor: 'bg-emerald-500/10', icon: 'Sparkles' },
+  terms: { color: '#6B7280', bgColor: 'bg-gray-500/10', icon: 'FileText' },
+  update: { color: '#3B82F6', bgColor: 'bg-blue-500/10', icon: 'RefreshCw' },
+  info: { color: '#4DA6FF', bgColor: 'bg-blue-500/10', icon: 'Info' },
+};

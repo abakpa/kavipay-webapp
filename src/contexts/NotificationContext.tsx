@@ -9,10 +9,12 @@ import {
 } from 'react';
 import { webSocketNotificationService } from '@/lib/services/WebSocketNotificationService';
 import { useAuth } from './AuthContext';
+import * as notificationAPI from '@/lib/api/notifications';
 import type {
   NotificationItem,
   NotificationPreferences,
   NotificationType,
+  SystemAnnouncement,
 } from '@/types/notification';
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
@@ -27,12 +29,21 @@ interface NotificationContextType {
   isConnected: boolean;
   isLoading: boolean;
 
+  // Announcements
+  announcements: SystemAnnouncement[];
+  announcementCount: number;
+
   // Actions
-  markAsRead: (notificationId: string) => void;
-  markAllAsRead: () => void;
+  markAsRead: (notificationId: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   clearAll: () => void;
   removeNotification: (notificationId: string) => void;
-  updatePreferences: (newPreferences: Partial<NotificationPreferences>) => void;
+  updatePreferences: (newPreferences: Partial<NotificationPreferences>) => Promise<void>;
+
+  // Refresh methods
+  refreshNotifications: () => Promise<void>;
+  refreshAnnouncements: () => Promise<void>;
+  dismissAnnouncement: (announcementId: string) => Promise<void>;
 
   // Push notifications
   requestPushPermission: () => Promise<boolean>;
@@ -50,6 +61,7 @@ const MAX_NOTIFICATIONS = 100;
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreferences>(
     DEFAULT_NOTIFICATION_PREFERENCES
   );
@@ -58,25 +70,88 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [currentToast, setCurrentToast] = useState<NotificationItem | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load preferences from localStorage
-  useEffect(() => {
+  // Load preferences from server first, then localStorage fallback
+  const loadPreferences = useCallback(async () => {
+    try {
+      // Try server first
+      const serverPrefs = await notificationAPI.getPreferences();
+      if (serverPrefs) {
+        const merged = { ...DEFAULT_NOTIFICATION_PREFERENCES, ...serverPrefs };
+        setPreferences(merged);
+        // Also save to localStorage as cache
+        localStorage.setItem(NOTIFICATION_STORAGE_KEYS.PREFERENCES, JSON.stringify(merged));
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to load preferences from server:', error);
+    }
+
+    // Fallback to localStorage
     try {
       const savedPreferences = localStorage.getItem(NOTIFICATION_STORAGE_KEYS.PREFERENCES);
       if (savedPreferences) {
         setPreferences({ ...DEFAULT_NOTIFICATION_PREFERENCES, ...JSON.parse(savedPreferences) });
       }
     } catch (error) {
-      console.error('Failed to load notification preferences:', error);
+      console.error('Failed to load notification preferences from localStorage:', error);
     }
-    setIsLoading(false);
   }, []);
 
-  // Save preferences to localStorage
-  const savePreferences = useCallback((prefs: NotificationPreferences) => {
+  // Fetch notifications from server
+  const refreshNotifications = useCallback(async () => {
+    try {
+      const serverNotifications = await notificationAPI.getNotifications();
+      if (Array.isArray(serverNotifications)) {
+        setNotifications(serverNotifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  }, []);
+
+  // Fetch announcements from server
+  const refreshAnnouncements = useCallback(async () => {
+    try {
+      const serverAnnouncements = await notificationAPI.getAnnouncements();
+      if (Array.isArray(serverAnnouncements)) {
+        setAnnouncements(serverAnnouncements);
+      }
+    } catch (error) {
+      console.error('Failed to fetch announcements:', error);
+    }
+  }, []);
+
+  // Initialize on mount and when user authenticates
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+      try {
+        await loadPreferences();
+        if (user) {
+          await Promise.all([refreshNotifications(), refreshAnnouncements()]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [user, loadPreferences, refreshNotifications, refreshAnnouncements]);
+
+  // Save preferences to both server and localStorage
+  const savePreferences = useCallback(async (prefs: NotificationPreferences) => {
+    // Save to localStorage first (immediate)
     try {
       localStorage.setItem(NOTIFICATION_STORAGE_KEYS.PREFERENCES, JSON.stringify(prefs));
     } catch (error) {
-      console.error('Failed to save notification preferences:', error);
+      console.error('Failed to save notification preferences to localStorage:', error);
+    }
+
+    // Then sync to server
+    try {
+      await notificationAPI.updatePreferences(prefs);
+    } catch (error) {
+      console.error('Failed to sync preferences to server:', error);
     }
   }, []);
 
@@ -87,6 +162,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } else {
       webSocketNotificationService.disconnect();
       setNotifications([]);
+      setAnnouncements([]);
     }
 
     return () => {
@@ -226,11 +302,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const granted = permission === 'granted';
 
       if (granted) {
-        setPreferences((prev) => {
-          const updated = { ...prev, pushEnabled: true };
-          savePreferences(updated);
-          return updated;
-        });
+        const updated = { ...preferences, pushEnabled: true };
+        setPreferences(updated);
+        await savePreferences(updated);
       }
 
       return granted;
@@ -238,7 +312,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       console.error('Failed to request notification permission:', error);
       return false;
     }
-  }, [savePreferences]);
+  }, [preferences, savePreferences]);
 
   // Get push permission status
   const getPushPermissionStatus = useCallback((): NotificationPermission => {
@@ -248,42 +322,85 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return Notification.permission;
   }, []);
 
-  // Mark notification as read
-  const markAsRead = useCallback((notificationId: string) => {
+  // Mark notification as read (optimistic update + API call)
+  const markAsRead = useCallback(async (notificationId: string) => {
+    // Optimistic update
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
     );
-  }, []);
 
-  // Mark all notifications as read
-  const markAllAsRead = useCallback(() => {
+    // Persist to server
+    try {
+      const success = await notificationAPI.markAsRead(notificationId);
+      if (!success) {
+        // Revert on failure
+        await refreshNotifications();
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      await refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  // Mark all notifications as read (optimistic update + API call)
+  const markAllAsRead = useCallback(async () => {
+    // Optimistic update
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
 
-  // Clear all notifications
+    // Persist to server
+    try {
+      const success = await notificationAPI.markAllAsRead();
+      if (!success) {
+        // Revert on failure
+        await refreshNotifications();
+      }
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+      await refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  // Clear all notifications (local only)
   const clearAll = useCallback(() => {
     setNotifications([]);
   }, []);
 
-  // Remove a specific notification
+  // Remove a specific notification (local only)
   const removeNotification = useCallback((notificationId: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
   }, []);
 
+  // Dismiss an announcement
+  const dismissAnnouncement = useCallback(async (announcementId: string) => {
+    // Optimistic update
+    setAnnouncements((prev) => prev.filter((a) => a.id !== announcementId));
+
+    // Persist to server
+    try {
+      const success = await notificationAPI.dismissAnnouncement(announcementId);
+      if (!success) {
+        // Revert on failure
+        await refreshAnnouncements();
+      }
+    } catch (error) {
+      console.error('Failed to dismiss announcement:', error);
+      await refreshAnnouncements();
+    }
+  }, [refreshAnnouncements]);
+
   // Update preferences
   const updatePreferences = useCallback(
-    (newPreferences: Partial<NotificationPreferences>) => {
-      setPreferences((prev) => {
-        const updated = { ...prev, ...newPreferences };
-        savePreferences(updated);
-        return updated;
-      });
+    async (newPreferences: Partial<NotificationPreferences>) => {
+      const updated = { ...preferences, ...newPreferences };
+      setPreferences(updated);
+      await savePreferences(updated);
     },
-    [savePreferences]
+    [preferences, savePreferences]
   );
 
-  // Calculate unread count
+  // Calculate counts
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const announcementCount = announcements.length;
 
   const value: NotificationContextType = {
     notifications,
@@ -291,11 +408,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     preferences,
     isConnected,
     isLoading,
+    announcements,
+    announcementCount,
     markAsRead,
     markAllAsRead,
     clearAll,
     removeNotification,
     updatePreferences,
+    refreshNotifications,
+    refreshAnnouncements,
+    dismissAnnouncement,
     requestPushPermission,
     getPushPermissionStatus,
     currentToast,
