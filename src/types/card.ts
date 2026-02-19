@@ -291,6 +291,52 @@ export interface CardPreOrder {
   singleTransactionLimit?: number;
   autoTopupEnabled?: boolean;
   cardNickname?: string;
+  // Delivery fields for physical cards
+  deliveryStatus?: DeliveryStatus;
+  deliveryWaybillNo?: string;
+  deliveryOrderedAt?: string;
+  deliveryUpdatedAt?: string;
+}
+
+// Delivery Status for physical cards
+export type DeliveryStatus = 'pending' | 'ordered' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'failed';
+
+// Tracking event from courier
+export interface TrackingEvent {
+  action: string;
+  actionName: string;
+  message: string;
+  messageEng: string;
+  time: string;
+  country?: string;
+}
+
+// Card Delivery information
+export interface CardDelivery {
+  id: number;
+  preOrderId: string;
+  waybillNo: string;
+  status: DeliveryStatus;
+  recipientName: string;
+  recipientPhone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  trackingEvents: { events?: TrackingEvent[] };
+  orderedAt?: string;
+  deliveredAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Request to create a delivery order
+export interface CreateDeliveryRequest {
+  recipientName: string;
+  recipientPhone: string;
+  address: string;
+  city: string;
+  state: string;
 }
 
 // KYC Types

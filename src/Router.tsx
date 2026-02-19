@@ -18,6 +18,9 @@ import { TopupCard } from '@/pages/cards/TopupCard';
 import { WithdrawCard } from '@/pages/cards/WithdrawCard';
 import { CardTransactions } from '@/pages/cards/CardTransactions';
 import { CardSettings } from '@/pages/cards/CardSettings';
+import { CardPreOrderStatus } from '@/pages/cards/CardPreOrderStatus';
+import { CardPreOrderHistory } from '@/pages/cards/CardPreOrderHistory';
+import { CardDelivery } from '@/pages/cards/CardDelivery';
 
 // KYC
 import { KYCFlow } from '@/pages/kyc/KYCFlow';
@@ -77,6 +80,9 @@ export const router = createBrowserRouter([
       // Virtual Cards
       { path: 'cards', element: <CardDashboard /> },
       { path: 'cards/create', element: <CreateCard /> },
+      { path: 'cards/pre-order-status', element: <CardPreOrderStatus /> },
+      { path: 'cards/pre-order-history', element: <CardPreOrderHistory /> },
+      { path: 'cards/pre-orders/:preOrderId/delivery', element: <CardDelivery /> },
       { path: 'cards/:cardId/topup', element: <TopupCard /> },
       { path: 'cards/:cardId/withdraw', element: <WithdrawCard /> },
       { path: 'cards/:cardId/transactions', element: <CardTransactions /> },
