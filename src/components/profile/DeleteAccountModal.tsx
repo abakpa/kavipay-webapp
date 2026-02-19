@@ -104,7 +104,10 @@ export function DeleteAccountModal({ isOpen, onClose, onDelete }: DeleteAccountM
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl mx-4">
+      <div
+        className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

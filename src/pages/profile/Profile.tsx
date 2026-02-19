@@ -15,30 +15,30 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar, EditProfileModal, DeleteAccountModal } from '@/components/profile';
-import { updateProfile, deleteAccount } from '@/lib/api/profile';
+import { deleteAccount } from '@/lib/api/profile';
 import type { ProfileFormData } from '@/types/profile';
 
 export function Profile() {
-  const { user, refreshUserData, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const userName = user?.name || user?.email?.split('@')[0] || 'User';
 
   const handleSaveProfile = async (data: ProfileFormData): Promise<boolean> => {
-    if (!user?.userId) return false;
+    if (!user) return false;
 
-    const result = await updateProfile(user.userId, {
-      name: data.name,
-      phoneNumber: data.phoneNumber,
-    });
-
-    if (result.success) {
-      await refreshUserData?.();
+    try {
+      // Use updateUser from AuthContext (matches mobile app exactly)
+      await updateUser({
+        name: data.name,
+        phone: data.phoneNumber,
+      });
       return true;
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error; // Let the modal handle the error display
     }
-
-    return false;
   };
 
   const handleDeleteAccount = async (): Promise<boolean> => {
@@ -165,7 +165,9 @@ export function Profile() {
 
             {/* Contact Support */}
             <a
-              href="mailto:support@kavipay.com"
+              href="https://www.kavipay.io/help"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">

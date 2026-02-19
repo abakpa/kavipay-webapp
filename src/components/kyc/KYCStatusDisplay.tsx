@@ -211,7 +211,7 @@ console.log('kyc status',kycStatus)
 
           {unifiedStatus === 'approved' && onContinue && (
             <Button className="w-full" onClick={onContinue}>
-              Create Virtual Card
+              Create Card
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
