@@ -29,8 +29,10 @@ function formatTimestamp(timestamp: number): string {
   });
 }
 
+const DEFAULT_STYLE = { color: '#6B7280', bgColor: 'bg-gray-500/10', icon: 'Bell' };
+
 export function NotificationItemComponent({ notification, onClick, compact = false }: NotificationItemProps) {
-  const style = NOTIFICATION_STYLES[notification.type];
+  const style = NOTIFICATION_STYLES[notification.type] ?? DEFAULT_STYLE;
 
   return (
     <button
