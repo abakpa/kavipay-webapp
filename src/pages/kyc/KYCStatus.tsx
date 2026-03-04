@@ -25,7 +25,7 @@ export function KYCStatus() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/dashboard')}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-accent hover:bg-accent/80"
         >
           <ArrowLeft className="h-5 w-5 text-foreground" />
