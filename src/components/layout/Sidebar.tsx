@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Smartphone,
   Bell,
+  Gift,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -23,6 +24,7 @@ const navItems = [
   { to: '/cards', label: 'Cards', icon: CreditCard },
   { to: '/utilities', label: 'Utilities', icon: Smartphone },
   { to: '/notifications', label: 'Notifications', icon: Bell },
+  { to: '/referral', label: 'Referrals', icon: Gift },
   { to: '/kyc', label: 'Verification', icon: ShieldCheck },
   { to: '/profile', label: 'Profile', icon: User },
   { to: '/settings', label: 'Settings', icon: Settings },
