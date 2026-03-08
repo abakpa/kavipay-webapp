@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { testAllReferralEndpoints } from '@/lib/api/referral';
 import {
   LayoutDashboard,
   Users,
@@ -183,6 +184,18 @@ export function ReferralDashboard() {
   const [referralSearch, setReferralSearch] = useState('');
   const [referralPage, setReferralPage] = useState(1);
   const referralsPerPage = 5;
+
+  // Test all referral API endpoints on mount
+  useEffect(() => {
+    console.log('🚀 ReferralDashboard mounted - Testing API endpoints...');
+    testAllReferralEndpoints()
+      .then((results) => {
+        console.log('📊 All endpoint tests completed:', results);
+      })
+      .catch((error) => {
+        console.error('❌ Error testing endpoints:', error);
+      });
+  }, []);
 
   const handleCopy = (type: 'code' | 'link') => {
     const text = type === 'code' ? MOCK_DATA.referralCode : MOCK_DATA.referralLink;
