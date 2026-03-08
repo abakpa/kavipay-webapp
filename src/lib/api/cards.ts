@@ -502,10 +502,14 @@ export const topupCard = async (
 
 export const withdrawFromCard = async (
   cardId: string,
-  amount: number
+  amount: number,
+  verificationToken?: string
 ): Promise<CardTransaction> => {
   // Use miningApi for withdraw (requires mining JWT token)
-  const response = await miningApi.post(`/cards/${cardId}/withdraw`, { amount });
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await miningApi.post(`/cards/${cardId}/withdraw`, { amount }, { headers });
   return response.data;
 };
 

@@ -7,7 +7,7 @@ import { Sidebar } from './Sidebar';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, deviceVerificationRequired } = useAuth();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   if (loading) {
@@ -16,6 +16,11 @@ export function MainLayout() {
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
+  }
+
+  // Redirect to device verification if required
+  if (deviceVerificationRequired) {
+    return <Navigate to="/auth/verify-device" replace />;
   }
 
   if (!user) {

@@ -9,7 +9,6 @@ import {
   Info,
   Trash2,
   ChevronRight,
-  Loader2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -61,12 +60,10 @@ const SETTINGS_SECTIONS = {
 };
 
 export function Settings() {
-  const { user, resetPassword, logout } = useAuth();
+  const { logout } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [passwordResetSent, setPasswordResetSent] = useState(false);
 
   // Filter sections based on search query
   const visibleSections = useMemo(() => {
@@ -106,21 +103,6 @@ export function Settings() {
 
     return result;
   }, [searchQuery]);
-
-  const handleChangePassword = async () => {
-    if (!user?.email || isResettingPassword) return;
-
-    setIsResettingPassword(true);
-    try {
-      await resetPassword(user.email);
-      setPasswordResetSent(true);
-      setTimeout(() => setPasswordResetSent(false), 5000);
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
-    } finally {
-      setIsResettingPassword(false);
-    }
-  };
 
   const handleDeleteAccount = async (): Promise<boolean> => {
     try {
@@ -166,10 +148,9 @@ export function Settings() {
           {/* Security Settings Card */}
           <Card>
             <CardContent className="p-0">
-              <button
-                onClick={handleChangePassword}
-                disabled={isResettingPassword}
-                className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors disabled:opacity-50"
+              <Link
+                to="/security"
+                className="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10">
@@ -178,18 +159,12 @@ export function Settings() {
                   <div className="text-left">
                     <span className="font-medium text-foreground">Security Settings</span>
                     <p className="text-xs text-muted-foreground">
-                      {passwordResetSent
-                        ? 'Reset link sent to your email!'
-                        : 'Password, 2FA, and login options'}
+                      Password, 2FA, PIN, and login options
                     </p>
                   </div>
                 </div>
-                {isResettingPassword ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
             </CardContent>
           </Card>
 

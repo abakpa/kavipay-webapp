@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowDownCircle, Info, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useVirtualCards } from '@/contexts/VirtualCardContext';
+import { useTransactionVerification } from '@/hooks/useTransactionVerification';
+import { TransactionVerificationModal } from '@/components/verification/TransactionVerificationModal';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (amount: number, currency: string): string => {
@@ -16,6 +18,7 @@ export function WithdrawCard() {
   const navigate = useNavigate();
   const { cardId } = useParams<{ cardId: string }>();
   const { cards, selectedCard, selectCard, withdrawFromCard, loadCards } = useVirtualCards();
+  const verification = useTransactionVerification();
 
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,11 +87,16 @@ export function WithdrawCard() {
     if (!currentCard) return;
 
     setShowConfirm(false);
+
+    // Request verification before proceeding
+    const verificationToken = await verification.requestVerification();
+    if (!verificationToken) return; // User cancelled verification
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await withdrawFromCard(currentCard.id, parseFloat(amount));
+      await withdrawFromCard(currentCard.id, parseFloat(amount), verificationToken);
       await loadCards(true);
 
       // Navigate back after success
@@ -108,7 +116,7 @@ export function WithdrawCard() {
 
   const parsedAmount = parseFloat(amount) || 0;
   const exceedsBalance = currentCard ? parsedAmount > currentCard.balance : false;
-  const isButtonDisabled = !amount || parsedAmount <= 0 || isLoading;
+  const isButtonDisabled = !amount || parsedAmount <= 0 || isLoading || verification.isVerifying;
 
   if (!currentCard) {
     return (
@@ -211,10 +219,10 @@ export function WithdrawCard() {
           disabled={isButtonDisabled || exceedsBalance}
           className={cn(
             'w-full gap-2 shadow-lg',
-            isLoading && 'cursor-not-allowed'
+            (isLoading || verification.isVerifying) && 'cursor-not-allowed'
           )}
         >
-          {isLoading ? (
+          {isLoading || verification.isVerifying ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <>
@@ -264,6 +272,24 @@ export function WithdrawCard() {
           </div>
         </div>
       )}
+
+      {/* Transaction Verification Modal */}
+      <TransactionVerificationModal
+        activeModal={verification.activeModal}
+        closeModal={verification.closeModal}
+        onPinSubmit={verification.onPinSubmit}
+        pinError={verification.pinError}
+        onTOTPSubmit={verification.onTOTPSubmit}
+        totpError={verification.totpError}
+        onEmailOTPRequest={verification.onEmailOTPRequest}
+        onEmailOTPSubmit={verification.onEmailOTPSubmit}
+        emailOTPError={verification.emailOTPError}
+        emailOTPSent={verification.emailOTPSent}
+        maskedEmail={verification.maskedEmail}
+        onMethodSelect={verification.onMethodSelect}
+        availableMethods={verification.availableMethods}
+        isVerifying={verification.isVerifying}
+      />
     </div>
   );
 }

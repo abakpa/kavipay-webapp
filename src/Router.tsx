@@ -7,6 +7,7 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 // Auth Pages
 import { AuthPage } from '@/pages/auth/AuthPage';
 import { ForgotPassword } from '@/pages/auth/ForgotPassword';
+import { DeviceVerification } from '@/pages/auth/DeviceVerification';
 
 // Dashboard
 import { Dashboard } from '@/pages/dashboard/Dashboard';
@@ -36,13 +37,16 @@ import { NairaWithdrawal } from '@/pages/withdrawal';
 import { TransactionsPage, TransactionDetailPage } from '@/pages/transactions';
 
 // Referral
-import { Referral } from '@/pages/referral/Referral';
+import { ReferralDashboard } from '@/pages/referral/ReferralDashboard';
 
 // Profile
 import { Profile } from '@/pages/profile/Profile';
 import { Settings } from '@/pages/profile/Settings';
 import { AboutKavipay } from '@/pages/profile/AboutKavipay';
 import { Legal } from '@/pages/profile/Legal';
+
+// Security
+import { SecuritySettings, TwoFactorSetup, PINManagement, Sessions } from '@/pages/security';
 
 // Notifications
 import { Notifications } from '@/pages/Notifications';
@@ -63,6 +67,7 @@ export const router = createBrowserRouter([
       { path: 'login', element: <AuthPage /> },
       { path: 'register', element: <Navigate to="/auth?tab=register" replace /> },
       { path: 'forgot-password', element: <ForgotPassword /> },
+      { path: 'verify-device', element: <DeviceVerification /> },
     ],
   },
 
@@ -102,13 +107,19 @@ export const router = createBrowserRouter([
       { path: 'transactions/:id', element: <TransactionDetailPage /> },
 
       // Referral
-      { path: 'referral', element: <Referral /> },
+      { path: 'referral', element: <ReferralDashboard /> },
 
       // Profile & Settings
       { path: 'profile', element: <Profile /> },
       { path: 'settings', element: <Settings /> },
       { path: 'about', element: <AboutKavipay /> },
       { path: 'legal', element: <Legal /> },
+
+      // Security
+      { path: 'security', element: <SecuritySettings /> },
+      { path: 'security/2fa', element: <TwoFactorSetup /> },
+      { path: 'security/pin', element: <PINManagement /> },
+      { path: 'security/sessions', element: <Sessions /> },
 
       // Notifications
       { path: 'notifications', element: <Notifications /> },
