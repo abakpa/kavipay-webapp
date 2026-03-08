@@ -14,6 +14,8 @@ import type { CryptoSelection, WalletCurrency } from '@/components/utilities/Pay
 import { DataNetworkProviders, ValidationPatterns } from '@/constants/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
+import { useTransactionVerification } from '@/hooks/useTransactionVerification';
+import { TransactionVerificationModal } from '@/components/verification/TransactionVerificationModal';
 import type { NetworkProvider, DataBundle, PaymentMethod } from '@/types/utilities';
 
 const STEPS = ['Details', 'Plan', 'Payment', 'Confirm'];
@@ -22,6 +24,7 @@ export function Data() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { loadDataBundles, buyData, dataBundles, isLoading, error } = useUtilities();
+  const verification = useTransactionVerification();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<NetworkProvider | null>(null);
@@ -90,12 +93,17 @@ export function Data() {
   const handleSubmit = async () => {
     if (!selectedProvider || !selectedBundle || !paymentMethod) return;
 
+    // Request verification before proceeding
+    const verificationToken = await verification.requestVerification();
+    if (!verificationToken) return; // User cancelled verification
+
     const result = await buyData({
       phoneNumber,
       amountInNaira: selectedBundle.amount,
       network: selectedProvider.id,
       variationCode: selectedBundle.variationCode,
       paymentMethod,
+      verificationToken,
       ...(paymentMethod === 'crypto' && cryptoSelection && {
         token: cryptoSelection.currency,
         cryptoNetwork: cryptoSelection.network,
@@ -240,7 +248,7 @@ export function Data() {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={isLoading}
+            disabled={isLoading || verification.isVerifying}
             className="flex-1"
           >
             Back
@@ -250,6 +258,7 @@ export function Data() {
           onClick={currentStep === 3 ? handleSubmit : handleNext}
           disabled={
             isLoading ||
+            verification.isVerifying ||
             isBundlesLoading ||
             (currentStep === 0 && (!selectedProvider || !phoneNumber)) ||
             (currentStep === 1 && !selectedBundle) ||
@@ -257,7 +266,7 @@ export function Data() {
           }
           className="flex-1"
         >
-          {isLoading ? (
+          {isLoading || verification.isVerifying ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
@@ -269,6 +278,24 @@ export function Data() {
           )}
         </Button>
       </div>
+
+      {/* Transaction Verification Modal */}
+      <TransactionVerificationModal
+        activeModal={verification.activeModal}
+        closeModal={verification.closeModal}
+        onPinSubmit={verification.onPinSubmit}
+        pinError={verification.pinError}
+        onTOTPSubmit={verification.onTOTPSubmit}
+        totpError={verification.totpError}
+        onEmailOTPRequest={verification.onEmailOTPRequest}
+        onEmailOTPSubmit={verification.onEmailOTPSubmit}
+        emailOTPError={verification.emailOTPError}
+        emailOTPSent={verification.emailOTPSent}
+        maskedEmail={verification.maskedEmail}
+        onMethodSelect={verification.onMethodSelect}
+        availableMethods={verification.availableMethods}
+        isVerifying={verification.isVerifying}
+      />
     </div>
   );
 }

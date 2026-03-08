@@ -53,16 +53,22 @@ export interface DataBundle {
 
 // Airtime
 
-export const buyAirtime = async (data: {
-  network: string;
-  phoneNumber: string;
-  amountInNaira: number;
-  currencyNetwork: string;
-  currency: string;
-  paymentMethod: string;
-  paymentCurrency?: 'USD' | 'NGN';
-}): Promise<{ success: boolean; message: string; transactionId?: string }> => {
-  const response = await api.post('/utilities/buy-aitime', data);
+export const buyAirtime = async (
+  data: {
+    network: string;
+    phoneNumber: string;
+    amountInNaira: number;
+    currencyNetwork: string;
+    currency: string;
+    paymentMethod: string;
+    paymentCurrency?: 'USD' | 'NGN';
+  },
+  verificationToken?: string
+): Promise<{ success: boolean; message: string; transactionId?: string }> => {
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await api.post('/utilities/buy-aitime', data, { headers });
   return response.data;
 };
 
@@ -88,16 +94,22 @@ export const getDataBundles = async (
   return { success: false, data: [] };
 };
 
-export const buyData = async (data: {
-  phoneNumber: string;
-  amountInNaira: number;
-  network: string;
-  variationCode: string;
-  currency: string;
-  paymentMethod: string;
-  paymentCurrency?: 'USD' | 'NGN';
-}): Promise<{ success: boolean; message: string; transactionId?: string }> => {
-  const response = await api.post('/utilities/buy-data', data);
+export const buyData = async (
+  data: {
+    phoneNumber: string;
+    amountInNaira: number;
+    network: string;
+    variationCode: string;
+    currency: string;
+    paymentMethod: string;
+    paymentCurrency?: 'USD' | 'NGN';
+  },
+  verificationToken?: string
+): Promise<{ success: boolean; message: string; transactionId?: string }> => {
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await api.post('/utilities/buy-data', data, { headers });
   return response.data;
 };
 
@@ -238,16 +250,19 @@ export const verifyMeterNumber = async (data: {
   return response.data;
 };
 
-export const buyPower = async (data: {
-  meterNumber: string;
-  amountInNaira: number;
-  serviceId: string;
-  serviceType: string;
-  currency: string;
-  paymentMethod: string;
-  phoneNumber: string;
-  paymentCurrency?: 'USD' | 'NGN';
-}): Promise<{
+export const buyPower = async (
+  data: {
+    meterNumber: string;
+    amountInNaira: number;
+    serviceId: string;
+    serviceType: string;
+    currency: string;
+    paymentMethod: string;
+    phoneNumber: string;
+    paymentCurrency?: 'USD' | 'NGN';
+  },
+  verificationToken?: string
+): Promise<{
   success: boolean;
   message: string;
   transactionId?: string;
@@ -256,7 +271,10 @@ export const buyPower = async (data: {
     units?: string;
   };
 }> => {
-  const response = await api.post('/utilities/buy-power', data);
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await api.post('/utilities/buy-power', data, { headers });
   return response.data;
 };
 
@@ -317,20 +335,26 @@ export const verifySmartCardNumber = async (data: {
   return response.data;
 };
 
-export const subscribeTv = async (data: {
-  cardNumber: string;
-  amountInNaira: number;
-  serviceId: string;
-  variationCode: string;
-  phoneNumber: string;
-  currency: string;
-  paymentMethod: string;
-  paymentCurrency?: 'USD' | 'NGN';
-}): Promise<{
+export const subscribeTv = async (
+  data: {
+    cardNumber: string;
+    amountInNaira: number;
+    serviceId: string;
+    variationCode: string;
+    phoneNumber: string;
+    currency: string;
+    paymentMethod: string;
+    paymentCurrency?: 'USD' | 'NGN';
+  },
+  verificationToken?: string
+): Promise<{
   success: boolean;
   message: string;
   transactionId?: string;
 }> => {
-  const response = await api.post('/utilities/subscribe-tv', data);
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await api.post('/utilities/subscribe-tv', data, { headers });
   return response.data;
 };

@@ -14,6 +14,8 @@ import type { CryptoSelection, WalletCurrency } from '@/components/utilities/Pay
 import { NetworkProviders, MinimumAmounts, ValidationPatterns } from '@/constants/utilities';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
+import { useTransactionVerification } from '@/hooks/useTransactionVerification';
+import { TransactionVerificationModal } from '@/components/verification/TransactionVerificationModal';
 import type { NetworkProvider, PaymentMethod } from '@/types/utilities';
 
 const STEPS = ['Details', 'Payment', 'Confirm'];
@@ -22,6 +24,7 @@ export function Airtime() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { buyAirtime, isLoading, error } = useUtilities();
+  const verification = useTransactionVerification();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<NetworkProvider | null>(null);
@@ -85,11 +88,16 @@ export function Airtime() {
   const handleSubmit = async () => {
     if (!selectedProvider || !paymentMethod) return;
 
+    // Request verification before proceeding
+    const verificationToken = await verification.requestVerification();
+    if (!verificationToken) return; // User cancelled verification
+
     const result = await buyAirtime({
       network: selectedProvider.id,
       phoneNumber,
       amountInNaira: numericAmount,
       paymentMethod,
+      verificationToken,
       ...(paymentMethod === 'crypto' && cryptoSelection && {
         token: cryptoSelection.currency,
         cryptoNetwork: cryptoSelection.network,
@@ -234,7 +242,7 @@ export function Airtime() {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={isLoading}
+            disabled={isLoading || verification.isVerifying}
             className="flex-1"
           >
             Back
@@ -244,12 +252,13 @@ export function Airtime() {
           onClick={currentStep === 2 ? handleSubmit : handleNext}
           disabled={
             isLoading ||
+            verification.isVerifying ||
             (currentStep === 0 && (!selectedProvider || !phoneNumber || !amount)) ||
             (currentStep === 1 && !isPaymentSelectionComplete)
           }
           className="flex-1"
         >
-          {isLoading ? (
+          {isLoading || verification.isVerifying ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
@@ -261,6 +270,24 @@ export function Airtime() {
           )}
         </Button>
       </div>
+
+      {/* Transaction Verification Modal */}
+      <TransactionVerificationModal
+        activeModal={verification.activeModal}
+        closeModal={verification.closeModal}
+        onPinSubmit={verification.onPinSubmit}
+        pinError={verification.pinError}
+        onTOTPSubmit={verification.onTOTPSubmit}
+        totpError={verification.totpError}
+        onEmailOTPRequest={verification.onEmailOTPRequest}
+        onEmailOTPSubmit={verification.onEmailOTPSubmit}
+        emailOTPError={verification.emailOTPError}
+        emailOTPSent={verification.emailOTPSent}
+        maskedEmail={verification.maskedEmail}
+        onMethodSelect={verification.onMethodSelect}
+        availableMethods={verification.availableMethods}
+        isVerifying={verification.isVerifying}
+      />
     </div>
   );
 }

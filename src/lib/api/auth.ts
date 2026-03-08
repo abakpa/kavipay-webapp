@@ -48,6 +48,24 @@ export interface MiningAuthResponse {
   isNewUser: boolean;
 }
 
+// Device verification required response
+export interface DeviceVerificationRequired {
+  status: 'verification_required';
+  session_id: number;
+  email?: string;
+  totp_available?: boolean;
+}
+
+// Union type for auth responses
+export type MiningAuthResult = MiningAuthResponse | DeviceVerificationRequired;
+
+// Type guard to check if device verification is required
+export const isDeviceVerificationRequired = (
+  response: MiningAuthResult
+): response is DeviceVerificationRequired => {
+  return 'status' in response && response.status === 'verification_required';
+};
+
 interface RegisteredUser {
   id: string;
   email: string;
@@ -64,12 +82,19 @@ interface ApiErrorResponse {
 /**
  * Authenticate with mining app using Firebase ID token.
  * Called after Firebase login to get mining-specific user data and JWT.
+ *
+ * Returns either:
+ * - MiningAuthResponse (token + user) for trusted devices
+ * - DeviceVerificationRequired for new/untrusted devices
  */
-export const authenticateWithMiningApp = async (): Promise<MiningAuthResponse> => {
+export const authenticateWithMiningApp = async (): Promise<MiningAuthResult> => {
   const response = await miningApi.post('/auth/firebase');
+
+  // Check if this is a successful auth (trusted device)
   if (response.data.token) {
     localStorage.setItem(MINING_JWT_TOKEN_KEY, response.data.token);
   }
+
   return response.data;
 };
 

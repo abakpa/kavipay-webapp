@@ -215,9 +215,13 @@ export async function validateBankAccount(
  * Initiate Naira payout (withdrawal to bank)
  */
 export async function initiateNairaPayout(
-  params: InitiateNairaPayoutParams
+  params: InitiateNairaPayoutParams,
+  verificationToken?: string
 ): Promise<NairaPayout> {
-  const response = await api.post<NairaPayout>('/naira/payout', params);
+  const headers = verificationToken
+    ? { 'X-Verification-Token': verificationToken }
+    : undefined;
+  const response = await api.post<NairaPayout>('/naira/payout', params, { headers });
   return response.data;
 }
 
