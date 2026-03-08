@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Smartphone, Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { Smartphone, Mail, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';

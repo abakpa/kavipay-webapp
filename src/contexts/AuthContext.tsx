@@ -30,7 +30,6 @@ import {
   isDeviceVerificationRequired,
   type MiningUserData,
   type MiningAuthResponse,
-  type DeviceVerificationRequired,
 } from '@/lib/api/auth';
 import { verifyDevice, resendDeviceOTP } from '@/lib/api/verification';
 import { getMiningToken, clearMiningToken } from '@/lib/api';
