@@ -203,7 +203,7 @@ interface VirtualCardContextType extends VirtualCardState {
     }
   ) => Promise<void>;
   topupCard: (cardId: string, amount: number, sourceCurrency?: string) => Promise<void>;
-  withdrawFromCard: (cardId: string, amount: number) => Promise<void>;
+  withdrawFromCard: (cardId: string, amount: number, verificationToken?: string) => Promise<void>;
 
   // Pre-order Operations
   loadPreOrders: () => Promise<void>;
@@ -441,11 +441,11 @@ export function VirtualCardProvider({ children }: VirtualCardProviderProps) {
     }
   }, []);
 
-  const withdrawFromCard = useCallback(async (cardId: string, amount: number) => {
+  const withdrawFromCard = useCallback(async (cardId: string, amount: number, verificationToken?: string) => {
     dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
-      const transaction = await cardApi.withdrawFromCard(cardId, amount);
+      const transaction = await cardApi.withdrawFromCard(cardId, amount, verificationToken);
       dispatch({ type: 'ADD_TRANSACTION', payload: { cardId, transaction } });
       // Refresh card to update balance
       const card = await cardApi.getCardById(cardId);

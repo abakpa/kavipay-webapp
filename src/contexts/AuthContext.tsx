@@ -27,9 +27,12 @@ import {
   authenticateWithMiningApp,
   registerUserConsolidated,
   getUserById,
+  isDeviceVerificationRequired,
   type MiningUserData,
   type MiningAuthResponse,
+  type DeviceVerificationRequired,
 } from '@/lib/api/auth';
+import { verifyDevice, resendDeviceOTP } from '@/lib/api/verification';
 import { getMiningToken, clearMiningToken } from '@/lib/api';
 import { updateUserProfile } from '@/lib/api/profile';
 
@@ -80,6 +83,12 @@ interface User {
   isNewMiningUser?: boolean;
 }
 
+interface DeviceVerificationState {
+  sessionId: number;
+  email: string;
+  totpAvailable: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   firebaseUser: FirebaseUser | null;
@@ -101,6 +110,10 @@ interface AuthContextType {
   refreshUserData: () => Promise<void>;
   retryMiningAuthentication: () => Promise<void>;
   updateUser: (userData: { name: string; phone?: string }) => Promise<void>;
+  // Device verification
+  deviceVerificationRequired: DeviceVerificationState | null;
+  completeDeviceVerification: (code: string, method?: 'totp' | 'email_otp') => Promise<void>;
+  resendDeviceVerificationOTP: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -159,10 +172,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [deviceVerificationRequired, setDeviceVerificationRequired] =
+    useState<DeviceVerificationState | null>(null);
 
   const authenticateWithMining = async (): Promise<MiningAuthResponse | null> => {
     try {
-      return await authenticateWithMiningApp();
+      const result = await authenticateWithMiningApp();
+
+      // Check if device verification is required
+      if (isDeviceVerificationRequired(result)) {
+        setDeviceVerificationRequired({
+          sessionId: result.session_id,
+          email: result.email || '',
+          totpAvailable: result.totp_available || false,
+        });
+        return null; // Return null to indicate verification needed
+      }
+
+      return result;
     } catch (error) {
       console.error('Mining app authentication failed:', error);
       return null; // Don't fail login if mining auth fails
@@ -315,6 +342,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Complete device verification with OTP or TOTP code
+  const completeDeviceVerification = async (
+    code: string,
+    method?: 'totp' | 'email_otp'
+  ) => {
+    if (!deviceVerificationRequired) {
+      throw new Error('No device verification pending');
+    }
+
+    setLoading(true);
+    try {
+      const result = await verifyDevice(
+        code,
+        deviceVerificationRequired.sessionId,
+        method
+      );
+
+      // Clear device verification state
+      setDeviceVerificationRequired(null);
+
+      // Set up user with the returned data
+      if (firebaseUser && result.user) {
+        const userData = convertFirebaseUser(firebaseUser, result.user as MiningUserData);
+        updateUserStorage(userData, result.token);
+        setUser(userData);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend device verification OTP
+  const resendDeviceVerificationOTP = async () => {
+    if (!deviceVerificationRequired) {
+      throw new Error('No device verification pending');
+    }
+
+    await resendDeviceOTP(deviceVerificationRequired.sessionId);
+  };
+
   // Update user profile - matches mobile app exactly
   const updateUser = async (userData: { name: string; phone?: string }) => {
     if (!user) {
@@ -369,6 +436,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshUserData,
         retryMiningAuthentication,
         updateUser,
+        deviceVerificationRequired,
+        completeDeviceVerification,
+        resendDeviceVerificationOTP,
       }}
     >
       {children}

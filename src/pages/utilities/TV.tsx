@@ -13,6 +13,8 @@ import {
 import type { CryptoSelection, WalletCurrency } from '@/components/utilities/PaymentMethodSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUtilities } from '@/contexts/UtilitiesContext';
+import { useTransactionVerification } from '@/hooks/useTransactionVerification';
+import { TransactionVerificationModal } from '@/components/verification/TransactionVerificationModal';
 import { ValidationPatterns, TvProviders as DefaultTvProviders } from '@/constants/utilities';
 import type { TvProvider, TvPackage, PaymentMethod } from '@/types/utilities';
 
@@ -33,6 +35,7 @@ export function TV() {
     isLoading,
     error,
   } = useUtilities();
+  const verification = useTransactionVerification();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<TvProvider | null>(null);
@@ -135,6 +138,10 @@ export function TV() {
   const handleSubmit = async () => {
     if (!selectedProvider || !selectedPackage || !paymentMethod) return;
 
+    // Request verification before proceeding
+    const verificationToken = await verification.requestVerification();
+    if (!verificationToken) return; // User cancelled verification
+
     const result = await subscribeTv({
       cardNumber: smartCardNumber,
       amountInNaira: selectedPackage.amount,
@@ -142,6 +149,7 @@ export function TV() {
       variationCode: selectedPackage.variationCode,
       phoneNumber,
       paymentMethod,
+      verificationToken,
       ...(paymentMethod === 'crypto' && cryptoSelection && {
         token: cryptoSelection.currency,
         cryptoNetwork: cryptoSelection.network,
@@ -337,7 +345,7 @@ export function TV() {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={isLoading}
+            disabled={isLoading || verification.isVerifying}
             className="flex-1"
           >
             Back
@@ -348,6 +356,7 @@ export function TV() {
             onClick={currentStep === 4 ? handleSubmit : handleNext}
             disabled={
               isLoading ||
+              verification.isVerifying ||
               isLoadingPackages ||
               (currentStep === 0 && !selectedProvider) ||
               (currentStep === 2 && !selectedPackage) ||
@@ -355,7 +364,7 @@ export function TV() {
             }
             className="flex-1"
           >
-            {isLoading ? (
+            {isLoading || verification.isVerifying ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
@@ -368,6 +377,24 @@ export function TV() {
           </Button>
         )}
       </div>
+
+      {/* Transaction Verification Modal */}
+      <TransactionVerificationModal
+        activeModal={verification.activeModal}
+        closeModal={verification.closeModal}
+        onPinSubmit={verification.onPinSubmit}
+        pinError={verification.pinError}
+        onTOTPSubmit={verification.onTOTPSubmit}
+        totpError={verification.totpError}
+        onEmailOTPRequest={verification.onEmailOTPRequest}
+        onEmailOTPSubmit={verification.onEmailOTPSubmit}
+        emailOTPError={verification.emailOTPError}
+        emailOTPSent={verification.emailOTPSent}
+        maskedEmail={verification.maskedEmail}
+        onMethodSelect={verification.onMethodSelect}
+        availableMethods={verification.availableMethods}
+        isVerifying={verification.isVerifying}
+      />
     </div>
   );
 }

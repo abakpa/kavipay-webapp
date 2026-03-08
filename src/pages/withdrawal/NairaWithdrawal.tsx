@@ -22,6 +22,8 @@ import type {
   NairaPayout,
 } from '@/types/deposit';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTransactionVerification } from '@/hooks/useTransactionVerification';
+import { TransactionVerificationModal } from '@/components/verification/TransactionVerificationModal';
 import { cn } from '@/lib/utils';
 
 type WithdrawalStep = 'bank_details' | 'amount' | 'confirm' | 'result';
@@ -35,6 +37,7 @@ const QUICK_AMOUNTS = [5000, 10000, 25000, 50000];
 export function NairaWithdrawal() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const verification = useTransactionVerification();
 
   // Step tracking
   const [step, setStep] = useState<WithdrawalStep>('bank_details');
@@ -154,18 +157,26 @@ export function NairaWithdrawal() {
 
   const handleSubmit = async () => {
     if (!selectedBank || !nameEnquiry) return;
+
+    // Request verification before proceeding
+    const verificationToken = await verification.requestVerification();
+    if (!verificationToken) return; // User cancelled verification
+
     setSubmitting(true);
     setError(null);
     try {
       const numAmount = parseFloat(amount.replace(/,/g, ''));
-      const payout = await initiateNairaPayout({
-        bankCode: selectedBank.nipCode || selectedBank.code,
-        bankName: selectedBank.name,
-        accountNumber,
-        accountName: nameEnquiry.accountName,
-        nameEnquiryReference: nameEnquiry.nameEnquiryReference,
-        amount: numAmount,
-      });
+      const payout = await initiateNairaPayout(
+        {
+          bankCode: selectedBank.nipCode || selectedBank.code,
+          bankName: selectedBank.name,
+          accountNumber,
+          accountName: nameEnquiry.accountName,
+          nameEnquiryReference: nameEnquiry.nameEnquiryReference,
+          amount: numAmount,
+        },
+        verificationToken
+      );
       setResult(payout);
       setStep('result');
     } catch (err: unknown) {
@@ -479,9 +490,9 @@ export function NairaWithdrawal() {
           <Button
             className="w-full bg-emerald-500 hover:bg-emerald-600"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || verification.isVerifying}
           >
-            {submitting ? (
+            {submitting || verification.isVerifying ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
@@ -495,7 +506,7 @@ export function NairaWithdrawal() {
             variant="outline"
             className="w-full"
             onClick={() => setStep('amount')}
-            disabled={submitting}
+            disabled={submitting || verification.isVerifying}
           >
             Go Back
           </Button>
@@ -623,6 +634,24 @@ export function NairaWithdrawal() {
         {step === 'confirm' && renderConfirmStep()}
         {step === 'result' && renderResultStep()}
       </div>
+
+      {/* Transaction Verification Modal */}
+      <TransactionVerificationModal
+        activeModal={verification.activeModal}
+        closeModal={verification.closeModal}
+        onPinSubmit={verification.onPinSubmit}
+        pinError={verification.pinError}
+        onTOTPSubmit={verification.onTOTPSubmit}
+        totpError={verification.totpError}
+        onEmailOTPRequest={verification.onEmailOTPRequest}
+        onEmailOTPSubmit={verification.onEmailOTPSubmit}
+        emailOTPError={verification.emailOTPError}
+        emailOTPSent={verification.emailOTPSent}
+        maskedEmail={verification.maskedEmail}
+        onMethodSelect={verification.onMethodSelect}
+        availableMethods={verification.availableMethods}
+        isVerifying={verification.isVerifying}
+      />
     </div>
   );
 }

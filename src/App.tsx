@@ -8,6 +8,7 @@ import { WalletProvider } from '@/contexts/WalletContext';
 import { ReferralProvider } from '@/contexts/ReferralContext';
 import { UtilitiesProvider } from '@/contexts/UtilitiesContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { VerificationProvider } from '@/contexts/VerificationContext';
 import { NotificationToast } from '@/components/notifications';
 import { router } from '@/Router';
 import './index.css';
@@ -16,22 +17,24 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NotificationProvider>
-          <SessionTimeoutProvider>
-            <KYCProvider>
-              <WalletProvider>
-                <UtilitiesProvider>
-                  <ReferralProvider>
-                    <VirtualCardProvider>
-                      <RouterProvider router={router} />
-                      <NotificationToast />
-                    </VirtualCardProvider>
-                  </ReferralProvider>
-                </UtilitiesProvider>
-              </WalletProvider>
-            </KYCProvider>
-          </SessionTimeoutProvider>
-        </NotificationProvider>
+        <VerificationProvider>
+          <NotificationProvider>
+            <SessionTimeoutProvider>
+              <KYCProvider>
+                <WalletProvider>
+                  <UtilitiesProvider>
+                    <ReferralProvider>
+                      <VirtualCardProvider>
+                        <RouterProvider router={router} />
+                        <NotificationToast />
+                      </VirtualCardProvider>
+                    </ReferralProvider>
+                  </UtilitiesProvider>
+                </WalletProvider>
+              </KYCProvider>
+            </SessionTimeoutProvider>
+          </NotificationProvider>
+        </VerificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );
