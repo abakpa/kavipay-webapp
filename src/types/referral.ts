@@ -15,15 +15,26 @@ export interface ReferralUser {
   joinedAt: string;
   isActive: boolean;
   earnings?: number;
+  status?: 'active' | 'pending' | 'inactive';
+  avatarUrl?: string;
 }
 
 // Referral stats
 export interface ReferralStats {
   totalReferrals: number;
+  directReferrals: number;
+  level2Referrals: number;
+  level3Referrals: number;
   activeReferrals: number;
+  totalEarnings: number;
+  thisMonthReferrals: number;
+  lastReferralDate?: string;
+  conversionRate: number;
+  // Legacy fields for backward compatibility
   totalBonus: number;
   pendingBonus: number;
   rank?: number;
+  tier?: string;
 }
 
 // Referral link types

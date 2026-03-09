@@ -11,4 +11,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Proxy referral API requests to bypass CORS in development
+      '/referral-api': {
+        target: 'https://ref-api.ploutoslabs.io',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/referral-api/, '/api/v1'),
+        secure: true,
+      },
+    },
+  },
 })
