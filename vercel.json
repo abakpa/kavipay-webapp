@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/referral-api/:path*",
+      "destination": "https://ref-api.ploutoslabs.io/api/v1/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
