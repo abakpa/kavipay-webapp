@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { testAllReferralEndpoints } from '@/lib/api/referral';
+import { useReferral } from '@/contexts/ReferralContext';
 import {
   LayoutDashboard,
   Users,
@@ -16,7 +16,6 @@ import {
   CheckCircle,
   DollarSign,
   Percent,
-  Package,
   ExternalLink,
   Calendar,
   Mail,
@@ -33,134 +32,14 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
 type TabType = 'dashboard' | 'referrals' | 'wallet' | 'transactions' | 'settings';
-
-// Mock data - replace with actual API data
-const MOCK_DATA = {
-  totalEarnings: 125000,
-  walletBalance: 45000,
-  pendingRewards: 12500,
-  referralCode: 'KAVI2024XYZ',
-  referralLink: 'https://kavipay.io/ref/KAVI2024XYZ',
-  growthRate: 23.5,
-  avgPerReferral: 2500,
-  activeProducts: 8,
-  recentActivities: [
-    {
-      id: '1',
-      type: 'signup',
-      description: 'John D. signed up using your code',
-      amount: null,
-      time: '2 hours ago',
-    },
-    {
-      id: '2',
-      type: 'earning',
-      description: 'Commission earned from Sarah M.',
-      amount: 1500,
-      time: '5 hours ago',
-    },
-    {
-      id: '3',
-      type: 'withdrawal',
-      description: 'Withdrawal to wallet completed',
-      amount: 10000,
-      time: '1 day ago',
-    },
-    {
-      id: '4',
-      type: 'signup',
-      description: 'Mike K. signed up using your code',
-      amount: null,
-      time: '2 days ago',
-    },
-    {
-      id: '5',
-      type: 'earning',
-      description: 'Commission earned from Ada O.',
-      amount: 2000,
-      time: '3 days ago',
-    },
-  ],
-  referredUsers: [
-    {
-      id: '1',
-      name: 'Ositadinma Precious 3',
-      email: 'geniuspechos@gmail.com',
-      joinedDate: '2025-09-10',
-      status: 'active',
-      level: 1,
-      code: '0',
-      referralsCount: 0,
-      earned: 0,
-    },
-    {
-      id: '2',
-      name: 'Emmanuel Ademu',
-      email: 'ojimcy7@gmail.com',
-      joinedDate: '2025-09-09',
-      status: 'active',
-      level: 1,
-      code: '32018F',
-      referralsCount: 0,
-      earned: 0,
-    },
-    {
-      id: '3',
-      name: 'Emmanuel Ademu',
-      email: 'ojimcy24@gmail.com',
-      joinedDate: '2025-09-09',
-      status: 'active',
-      level: 1,
-      code: 'E7F293',
-      referralsCount: 0,
-      earned: 0,
-    },
-    {
-      id: '4',
-      name: 'Ojima',
-      email: 'ojaymi@gmail.com',
-      joinedDate: '2025-09-09',
-      status: 'active',
-      level: 1,
-      code: 'EB076F',
-      referralsCount: 0,
-      earned: 0,
-    },
-    {
-      id: '5',
-      name: 'Emmanuel Ademu',
-      email: 'ademuemmanuel11@gmail.com',
-      joinedDate: '2025-09-09',
-      status: 'active',
-      level: 1,
-      code: '4DC899',
-      referralsCount: 0,
-      earned: 0,
-    },
-  ],
-  transactions: [] as Array<{
-    id: string;
-    description: string;
-    type: 'commission' | 'withdrawal' | 'bonus';
-    amount: number;
-    status: 'completed' | 'pending' | 'failed';
-    date: string;
-    referredUser?: string;
-  }>,
-  profile: {
-    email: 'ojimcy247@gmail.com',
-    displayName: 'Emmy',
-    userId: '7ab1c8c8-255f-4d5c-906e-aef7700c2623',
-    referralCode: '9DF91D',
-    language: 'English',
-  },
-};
 
 const TABS: { id: TabType; label: string; icon: typeof Users }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -171,6 +50,27 @@ const TABS: { id: TabType; label: string; icon: typeof Users }[] = [
 ];
 
 export function ReferralDashboard() {
+  // Get data from ReferralContext
+  const {
+    referralCode,
+    referralLink,
+    referralStats,
+    referrals,
+    wallet,
+    transactions,
+    profile,
+    dashboard,
+    isLoading,
+    isWalletLoading,
+    isTransactionsLoading,
+    isProfileLoading,
+    isDashboardLoading,
+    referralsPagination,
+    transactionsPagination,
+    loadTransactions,
+    refreshAll,
+  } = useReferral();
+
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
 
@@ -185,20 +85,15 @@ export function ReferralDashboard() {
   const [referralPage, setReferralPage] = useState(1);
   const referralsPerPage = 5;
 
-  // Test all referral API endpoints on mount
+  // Load transactions when switching to transactions tab
   useEffect(() => {
-    console.log('🚀 ReferralDashboard mounted - Testing API endpoints...');
-    testAllReferralEndpoints()
-      .then((results) => {
-        console.log('📊 All endpoint tests completed:', results);
-      })
-      .catch((error) => {
-        console.error('❌ Error testing endpoints:', error);
-      });
-  }, []);
+    if (activeTab === 'transactions' && transactions.length === 0) {
+      loadTransactions();
+    }
+  }, [activeTab, transactions.length, loadTransactions]);
 
   const handleCopy = (type: 'code' | 'link') => {
-    const text = type === 'code' ? MOCK_DATA.referralCode : MOCK_DATA.referralLink;
+    const text = type === 'code' ? referralCode : referralLink;
     navigator.clipboard.writeText(text);
     setCopied(type);
     setTimeout(() => setCopied(null), 2000);
@@ -209,8 +104,8 @@ export function ReferralDashboard() {
       try {
         await navigator.share({
           title: 'Join KaviPay',
-          text: `Use my referral code ${MOCK_DATA.referralCode} to sign up on KaviPay and earn rewards!`,
-          url: MOCK_DATA.referralLink,
+          text: `Use my referral code ${referralCode} to sign up on KaviPay and earn rewards!`,
+          url: referralLink,
         });
       } catch (err) {
         // User cancelled or share failed
@@ -221,8 +116,15 @@ export function ReferralDashboard() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `₦${amount.toLocaleString()}`;
+  const handleRefresh = () => {
+    refreshAll();
+  };
+
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    if (currency === 'NGN') {
+      return `₦${amount.toLocaleString()}`;
+    }
+    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   };
 
   const getActivityIcon = (type: string) => {
@@ -238,12 +140,42 @@ export function ReferralDashboard() {
     }
   };
 
+  // Filter referrals based on search
+  const filteredReferrals = referrals.filter((user) => {
+    if (!referralSearch) return true;
+    return (
+      user.name?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+      user.email?.toLowerCase().includes(referralSearch.toLowerCase()) ||
+      user.code?.toLowerCase().includes(referralSearch.toLowerCase())
+    );
+  });
+
+  // Filter transactions based on filters
+  const filteredTransactions = transactions.filter((tx) => {
+    if (txTypeFilter !== 'all' && tx.type !== txTypeFilter) return false;
+    if (txStatusFilter !== 'all' && tx.status !== txStatusFilter) return false;
+    if (txSearch && !tx.description?.toLowerCase().includes(txSearch.toLowerCase())) return false;
+    return true;
+  });
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Referral Dashboard</h1>
-        <p className="text-muted-foreground">Track your referrals and earnings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Referral Dashboard</h1>
+          <p className="text-muted-foreground">Track your referrals and earnings</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading || isDashboardLoading}
+          className="gap-2"
+        >
+          <RefreshCw className={cn("h-4 w-4", (isLoading || isDashboardLoading) && "animate-spin")} />
+          Refresh
+        </Button>
       </div>
 
       {/* Tab Navigation */}
@@ -281,14 +213,20 @@ export function ReferralDashboard() {
                     <div>
                       <p className="text-sm font-medium text-emerald-100">Total Earnings</p>
                       <p className="mt-1 text-2xl font-bold text-white">
-                        {formatCurrency(MOCK_DATA.totalEarnings)}
+                        {isDashboardLoading ? (
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                          formatCurrency(dashboard.totalEarnings || referralStats.totalBonus || 0)
+                        )}
                       </p>
                     </div>
                     <div className="rounded-full bg-white/20 p-3">
                       <TrendingUp className="h-6 w-6 text-white" />
                     </div>
                   </div>
-                  <p className="mt-2 text-xs text-emerald-100">+12% from last month</p>
+                  <p className="mt-2 text-xs text-emerald-100">
+                    {dashboard.growthRate > 0 ? `+${dashboard.growthRate}% from last month` : 'Lifetime earnings'}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -301,7 +239,11 @@ export function ReferralDashboard() {
                     <div>
                       <p className="text-sm font-medium text-blue-100">Wallet Balance</p>
                       <p className="mt-1 text-2xl font-bold text-white">
-                        {formatCurrency(MOCK_DATA.walletBalance)}
+                        {isWalletLoading ? (
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                          formatCurrency(wallet.balance || dashboard.walletBalance || 0)
+                        )}
                       </p>
                     </div>
                     <div className="rounded-full bg-white/20 p-3">
@@ -321,7 +263,11 @@ export function ReferralDashboard() {
                     <div>
                       <p className="text-sm font-medium text-amber-100">Pending Rewards</p>
                       <p className="mt-1 text-2xl font-bold text-white">
-                        {formatCurrency(MOCK_DATA.pendingRewards)}
+                        {isDashboardLoading ? (
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                          formatCurrency(wallet.pendingBalance || dashboard.pendingRewards || referralStats.pendingBonus || 0)
+                        )}
                       </p>
                     </div>
                     <div className="rounded-full bg-white/20 p-3">
@@ -348,13 +294,14 @@ export function ReferralDashboard() {
                   </label>
                   <div className="mt-1 flex items-center gap-2">
                     <div className="flex-1 rounded-lg bg-muted px-4 py-3 font-mono text-lg font-bold text-foreground">
-                      {MOCK_DATA.referralCode}
+                      {referralCode || profile.referralCode || '---'}
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopy('code')}
                       className="h-12 w-12 p-0"
+                      disabled={!referralCode}
                     >
                       {copied === 'code' ? (
                         <CheckCircle className="h-5 w-5 text-emerald-500" />
@@ -372,13 +319,14 @@ export function ReferralDashboard() {
                   </label>
                   <div className="mt-1 flex items-center gap-2">
                     <div className="flex-1 truncate rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-                      {MOCK_DATA.referralLink}
+                      {referralLink || profile.referralLink || 'No referral link available'}
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopy('link')}
                       className="h-12 w-12 p-0"
+                      disabled={!referralLink}
                     >
                       {copied === 'link' ? (
                         <CheckCircle className="h-5 w-5 text-emerald-500" />
@@ -464,7 +412,7 @@ export function ReferralDashboard() {
                         <div>
                           <p className="text-xs font-medium text-muted-foreground">Growth Rate</p>
                           <p className="text-lg font-bold text-foreground">
-                            +{MOCK_DATA.growthRate}%
+                            {dashboard.growthRate > 0 ? `+${dashboard.growthRate}%` : '0%'}
                           </p>
                         </div>
                       </div>
@@ -484,26 +432,26 @@ export function ReferralDashboard() {
                             Avg. per Referral
                           </p>
                           <p className="text-lg font-bold text-foreground">
-                            {formatCurrency(MOCK_DATA.avgPerReferral)}
+                            {formatCurrency(dashboard.avgPerReferral || 0)}
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Active Products */}
+                  {/* Total Referrals */}
                   <div className="rounded-xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="rounded-full bg-purple-500/20 p-2">
-                          <Package className="h-5 w-5 text-purple-500" />
+                          <Users className="h-5 w-5 text-purple-500" />
                         </div>
                         <div>
                           <p className="text-xs font-medium text-muted-foreground">
-                            Active Products
+                            Total Referrals
                           </p>
                           <p className="text-lg font-bold text-foreground">
-                            {MOCK_DATA.activeProducts}
+                            {referralStats.totalReferrals}
                           </p>
                         </div>
                       </div>
@@ -525,28 +473,39 @@ export function ReferralDashboard() {
               </div>
 
               <div className="mt-4 divide-y divide-border">
-                {MOCK_DATA.recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{activity.description}</p>
-                      <p className="text-sm text-muted-foreground">{activity.time}</p>
-                    </div>
-                    {activity.amount && (
-                      <p
-                        className={cn(
-                          'font-semibold',
-                          activity.type === 'withdrawal' ? 'text-purple-500' : 'text-emerald-500'
-                        )}
-                      >
-                        {activity.type === 'withdrawal' ? '-' : '+'}
-                        {formatCurrency(activity.amount)}
-                      </p>
-                    )}
+                {isDashboardLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
-                ))}
+                ) : dashboard.recentActivities.length > 0 ? (
+                  dashboard.recentActivities.map((activity) => (
+                    <div key={activity.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{activity.description}</p>
+                        <p className="text-sm text-muted-foreground">{activity.time}</p>
+                      </div>
+                      {activity.amount && (
+                        <p
+                          className={cn(
+                            'font-semibold',
+                            activity.type === 'withdrawal' ? 'text-purple-500' : 'text-emerald-500'
+                          )}
+                        >
+                          {activity.type === 'withdrawal' ? '-' : '+'}
+                          {formatCurrency(activity.amount)}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Clock className="h-10 w-10 text-muted-foreground/50" />
+                    <p className="mt-3 text-sm text-muted-foreground">No recent activities</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -565,7 +524,7 @@ export function ReferralDashboard() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-blue-500">
-                  {MOCK_DATA.referredUsers.length}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : referralStats.totalReferrals}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Referrals</p>
               </CardContent>
@@ -575,7 +534,7 @@ export function ReferralDashboard() {
             <Card className="border-l-4 border-l-blue-500">
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-blue-500">
-                  {MOCK_DATA.referredUsers.filter(u => u.level === 1).length}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : referralStats.directReferrals}
                 </p>
                 <p className="text-sm text-muted-foreground">Direct (Level 1)</p>
               </CardContent>
@@ -585,7 +544,11 @@ export function ReferralDashboard() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-purple-500">
-                  {MOCK_DATA.referredUsers.filter(u => u.level >= 2).length}
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                  ) : (
+                    referralStats.level2Referrals + referralStats.level3Referrals
+                  )}
                 </p>
                 <p className="text-sm text-muted-foreground">Indirect (Level 2+)</p>
               </CardContent>
@@ -595,7 +558,7 @@ export function ReferralDashboard() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-amber-500">
-                  {MOCK_DATA.referredUsers.filter(u => u.status === 'active').length}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : referralStats.activeReferrals}
                 </p>
                 <p className="text-sm text-muted-foreground">Active</p>
               </CardContent>
@@ -605,7 +568,11 @@ export function ReferralDashboard() {
             <Card className="col-span-2 sm:col-span-1">
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-orange-500">
-                  ${MOCK_DATA.referredUsers.reduce((sum, u) => sum + u.earned, 0).toFixed(2)}
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                  ) : (
+                    formatCurrency(referralStats.totalEarnings)
+                  )}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Earned</p>
               </CardContent>
@@ -658,87 +625,89 @@ export function ReferralDashboard() {
 
               {/* Referrals List */}
               <div className="divide-y divide-border">
-                {MOCK_DATA.referredUsers
-                  .filter(user => {
-                    if (!referralSearch) return true;
-                    return (
-                      user.name.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                      user.email.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                      user.code.toLowerCase().includes(referralSearch.toLowerCase())
-                    );
-                  })
-                  .slice((referralPage - 1) * referralsPerPage, referralPage * referralsPerPage)
-                  .map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-4 p-4 sm:px-6 transition-colors hover:bg-muted/50"
-                    >
-                      {/* Avatar */}
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400 flex-shrink-0">
-                        <User className="h-5 w-5" />
-                      </div>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  filteredReferrals
+                    .slice((referralPage - 1) * referralsPerPage, referralPage * referralsPerPage)
+                    .map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-4 p-4 sm:px-6 transition-colors hover:bg-muted/50"
+                      >
+                        {/* Avatar */}
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400 flex-shrink-0">
+                          <User className="h-5 w-5" />
+                        </div>
 
-                      {/* User Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-foreground">{user.name}</p>
-                          <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
-                            Level {user.level}
-                          </span>
-                          <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-600">
-                            {user.status}
-                          </span>
+                        {/* User Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-foreground">{user.name}</p>
+                            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+                              Level {user.level || 1}
+                            </span>
+                            <span className={cn(
+                              "rounded-md px-2 py-0.5 text-xs font-medium",
+                              user.isActive || user.status === 'active'
+                                ? "bg-emerald-100 text-emerald-600"
+                                : "bg-gray-100 text-gray-600"
+                            )}>
+                              {user.isActive || user.status === 'active' ? 'active' : 'inactive'}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                            {user.email && (
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(user.joinedDate || user.joinedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
+                            {user.code && (
+                              <span className="text-muted-foreground">
+                                Code: {user.code}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {user.email}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(user.joinedDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          <span className="text-muted-foreground">
-                            Code: {user.code}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Stats - Right Side */}
-                      <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
-                        <div className="text-right">
-                          <p className="font-semibold text-foreground">{user.referralsCount}</p>
-                          <p className="text-xs text-muted-foreground">Referrals</p>
+                        {/* Stats - Right Side */}
+                        <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
+                          <div className="text-right">
+                            <p className="font-semibold text-foreground">{user.referralsCount || 0}</p>
+                            <p className="text-xs text-muted-foreground">Referrals</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-emerald-500">
+                              {formatCurrency(user.earned || user.earnings || 0)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Earned</p>
+                          </div>
                         </div>
-                        <div className="text-right">
+
+                        {/* Mobile Stats */}
+                        <div className="sm:hidden text-right flex-shrink-0">
                           <p className="font-semibold text-emerald-500">
-                            ${user.earned.toFixed(2)}
+                            {formatCurrency(user.earned || user.earnings || 0)}
                           </p>
                           <p className="text-xs text-muted-foreground">Earned</p>
                         </div>
                       </div>
-
-                      {/* Mobile Stats */}
-                      <div className="sm:hidden text-right flex-shrink-0">
-                        <p className="font-semibold text-emerald-500">${user.earned.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">Earned</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                )}
 
                 {/* Empty State */}
-                {MOCK_DATA.referredUsers.filter(user => {
-                  if (!referralSearch) return true;
-                  return (
-                    user.name.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                    user.email.toLowerCase().includes(referralSearch.toLowerCase()) ||
-                    user.code.toLowerCase().includes(referralSearch.toLowerCase())
-                  );
-                }).length === 0 && (
+                {!isLoading && filteredReferrals.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Users className="h-12 w-12 text-muted-foreground" />
                     <p className="mt-4 text-lg font-semibold text-foreground">No referrals found</p>
@@ -752,12 +721,12 @@ export function ReferralDashboard() {
               </div>
 
               {/* Pagination */}
-              {MOCK_DATA.referredUsers.length > 0 && (
+              {filteredReferrals.length > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border px-6 py-4">
                   <p className="text-sm text-muted-foreground">
                     Showing {((referralPage - 1) * referralsPerPage) + 1} to{' '}
-                    {Math.min(referralPage * referralsPerPage, MOCK_DATA.referredUsers.length)} of{' '}
-                    {MOCK_DATA.referredUsers.length} referrals
+                    {Math.min(referralPage * referralsPerPage, filteredReferrals.length)} of{' '}
+                    {referralsPagination.total || filteredReferrals.length} referrals
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -777,7 +746,7 @@ export function ReferralDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => setReferralPage(p => p + 1)}
-                      disabled={referralPage * referralsPerPage >= MOCK_DATA.referredUsers.length}
+                      disabled={referralPage * referralsPerPage >= filteredReferrals.length}
                       className="gap-1"
                     >
                       Next
@@ -806,7 +775,11 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Available Balance</p>
                     <p className="text-2xl font-bold text-foreground">
-                      ${MOCK_DATA.walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {isWalletLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        formatCurrency(wallet.balance)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -823,7 +796,11 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Pending Balance</p>
                     <p className="text-2xl font-bold text-foreground">
-                      ${MOCK_DATA.pendingRewards.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {isWalletLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        formatCurrency(wallet.pendingBalance)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -840,7 +817,11 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Earned</p>
                     <p className="text-2xl font-bold text-foreground">
-                      ${MOCK_DATA.totalEarnings.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {isWalletLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        formatCurrency(wallet.totalEarned)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -857,7 +838,11 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Withdrawn</p>
                     <p className="text-2xl font-bold text-foreground">
-                      $0.00
+                      {isWalletLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        formatCurrency(wallet.totalWithdrawn)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -871,12 +856,14 @@ export function ReferralDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-                  <p className="text-sm text-muted-foreground">Minimum withdrawal: $50.00</p>
+                  <p className="text-sm text-muted-foreground">
+                    Minimum withdrawal: {formatCurrency(wallet.minimumWithdrawal)}
+                  </p>
                 </div>
                 <Button
                   variant="outline"
                   className="gap-2"
-                  disabled={MOCK_DATA.walletBalance < 50}
+                  disabled={wallet.balance < wallet.minimumWithdrawal}
                 >
                   <ArrowDownCircle className="h-4 w-4" />
                   Request Withdrawal
@@ -884,15 +871,15 @@ export function ReferralDashboard() {
               </div>
 
               {/* Warning Message */}
-              {MOCK_DATA.walletBalance < 50 && (
+              {wallet.balance < wallet.minimumWithdrawal && (
                 <div className="mt-4 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 p-4">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">
                     <span className="text-amber-600 text-sm font-bold">!</span>
                   </div>
                   <p className="text-sm text-amber-700">
-                    You need at least $50.00 to request a withdrawal. Current balance:{' '}
+                    You need at least {formatCurrency(wallet.minimumWithdrawal)} to request a withdrawal. Current balance:{' '}
                     <span className="font-semibold">
-                      ${MOCK_DATA.walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {formatCurrency(wallet.balance)}
                     </span>
                   </p>
                 </div>
@@ -907,16 +894,25 @@ export function ReferralDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">Recent Transactions</h3>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setActiveTab('transactions')}
+                  >
                     <Clock className="h-4 w-4" />
                     View All
                   </Button>
                 </div>
 
                 {/* Transaction List or Empty State */}
-                {MOCK_DATA.recentActivities.filter(a => a.type === 'earning').length > 0 ? (
+                {isTransactionsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : dashboard.recentActivities.filter(a => a.type === 'earning').length > 0 ? (
                   <div className="divide-y divide-border">
-                    {MOCK_DATA.recentActivities
+                    {dashboard.recentActivities
                       .filter(a => a.type === 'earning')
                       .slice(0, 3)
                       .map((activity) => (
@@ -931,7 +927,7 @@ export function ReferralDashboard() {
                             <p className="text-xs text-muted-foreground">{activity.time}</p>
                           </div>
                           <p className="text-sm font-semibold text-emerald-500">
-                            +${activity.amount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            +{formatCurrency(activity.amount || 0)}
                           </p>
                         </div>
                       ))}
@@ -950,16 +946,28 @@ export function ReferralDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">Withdrawal History</h3>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      setTxTypeFilter('withdrawal');
+                      setActiveTab('transactions');
+                    }}
+                  >
                     <Clock className="h-4 w-4" />
                     View All
                   </Button>
                 </div>
 
                 {/* Withdrawal List or Empty State */}
-                {MOCK_DATA.recentActivities.filter(a => a.type === 'withdrawal').length > 0 ? (
+                {isTransactionsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : dashboard.recentActivities.filter(a => a.type === 'withdrawal').length > 0 ? (
                   <div className="divide-y divide-border">
-                    {MOCK_DATA.recentActivities
+                    {dashboard.recentActivities
                       .filter(a => a.type === 'withdrawal')
                       .slice(0, 3)
                       .map((activity) => (
@@ -974,7 +982,7 @@ export function ReferralDashboard() {
                             <p className="text-xs text-muted-foreground">{activity.time}</p>
                           </div>
                           <p className="text-sm font-semibold text-foreground">
-                            -${activity.amount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            -{formatCurrency(activity.amount || 0)}
                           </p>
                         </div>
                       ))}
@@ -1006,7 +1014,11 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Transactions</p>
                     <p className="text-2xl font-bold text-foreground">
-                      {MOCK_DATA.transactions.length}
+                      {isTransactionsLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        transactionsPagination.total || transactions.length
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1023,10 +1035,15 @@ export function ReferralDashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Net Amount</p>
                     <p className="text-2xl font-bold text-foreground">
-                      ${MOCK_DATA.transactions
-                        .filter(t => t.status === 'completed')
-                        .reduce((sum, t) => sum + (t.type === 'withdrawal' ? -t.amount : t.amount), 0)
-                        .toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {isTransactionsLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        formatCurrency(
+                          transactions
+                            .filter(t => t.status === 'completed')
+                            .reduce((sum, t) => sum + (t.type === 'withdrawal' ? -t.amount : t.amount), 0)
+                        )
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1152,60 +1169,63 @@ export function ReferralDashboard() {
               </div>
 
               {/* Table Body or Empty State */}
-              {MOCK_DATA.transactions.length > 0 ? (
+              {isTransactionsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredTransactions.length > 0 ? (
                 <div className="divide-y divide-border">
-                  {MOCK_DATA.transactions
-                    .filter(t => {
-                      if (txTypeFilter !== 'all' && t.type !== txTypeFilter) return false;
-                      if (txStatusFilter !== 'all' && t.status !== txStatusFilter) return false;
-                      if (txSearch && !t.description.toLowerCase().includes(txSearch.toLowerCase())) return false;
-                      return true;
-                    })
-                    .map((tx) => (
-                      <div key={tx.id} className="grid grid-cols-2 gap-2 p-4 lg:grid-cols-6 lg:gap-4 lg:px-6">
-                        <div className="col-span-2 lg:col-span-1">
-                          <p className="font-medium text-foreground truncate">{tx.description}</p>
-                          <p className="text-xs text-muted-foreground lg:hidden">{tx.date}</p>
-                        </div>
-                        <div className="hidden lg:block">
-                          <span className={cn(
-                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                            tx.type === 'commission' && 'bg-emerald-100 text-emerald-700',
-                            tx.type === 'withdrawal' && 'bg-purple-100 text-purple-700',
-                            tx.type === 'bonus' && 'bg-blue-100 text-blue-700'
-                          )}>
-                            {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
-                          </span>
-                        </div>
-                        <div>
-                          <p className={cn(
-                            'font-semibold',
-                            tx.type === 'withdrawal' ? 'text-foreground' : 'text-emerald-500'
-                          )}>
-                            {tx.type === 'withdrawal' ? '-' : '+'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div>
-                          <span className={cn(
-                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                            tx.status === 'completed' && 'bg-emerald-100 text-emerald-700',
-                            tx.status === 'pending' && 'bg-amber-100 text-amber-700',
-                            tx.status === 'failed' && 'bg-red-100 text-red-700'
-                          )}>
-                            {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                          </span>
-                        </div>
-                        <div className="hidden lg:block">
-                          <p className="text-sm text-muted-foreground">{tx.date}</p>
-                        </div>
-                        <div className="hidden lg:block">
-                          <Button variant="ghost" size="sm" className="h-8 gap-1 text-kaviBlue">
-                            <Eye className="h-4 w-4" />
-                            View
-                          </Button>
-                        </div>
+                  {filteredTransactions.map((tx) => (
+                    <div key={tx.id} className="grid grid-cols-2 gap-2 p-4 lg:grid-cols-6 lg:gap-4 lg:px-6">
+                      <div className="col-span-2 lg:col-span-1">
+                        <p className="font-medium text-foreground truncate">
+                          {tx.description || tx.referralName || `${tx.type} transaction`}
+                        </p>
+                        <p className="text-xs text-muted-foreground lg:hidden">
+                          {tx.date || new Date(tx.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                    ))}
+                      <div className="hidden lg:block">
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          tx.type === 'commission' && 'bg-emerald-100 text-emerald-700',
+                          tx.type === 'withdrawal' && 'bg-purple-100 text-purple-700',
+                          tx.type === 'bonus' && 'bg-blue-100 text-blue-700'
+                        )}>
+                          {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className={cn(
+                          'font-semibold',
+                          tx.type === 'withdrawal' ? 'text-foreground' : 'text-emerald-500'
+                        )}>
+                          {tx.type === 'withdrawal' ? '-' : '+'}{formatCurrency(tx.amount)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          tx.status === 'completed' && 'bg-emerald-100 text-emerald-700',
+                          tx.status === 'pending' && 'bg-amber-100 text-amber-700',
+                          tx.status === 'failed' && 'bg-red-100 text-red-700'
+                        )}>
+                          {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                        </span>
+                      </div>
+                      <div className="hidden lg:block">
+                        <p className="text-sm text-muted-foreground">
+                          {tx.date || new Date(tx.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="hidden lg:block">
+                        <Button variant="ghost" size="sm" className="h-8 gap-1 text-kaviBlue">
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-16">
@@ -1214,7 +1234,9 @@ export function ReferralDashboard() {
                   </div>
                   <h3 className="mt-4 text-lg font-semibold text-foreground">No transactions found</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Try adjusting your search or filter criteria
+                    {txSearch || txTypeFilter !== 'all' || txStatusFilter !== 'all'
+                      ? 'Try adjusting your search or filter criteria'
+                      : 'Your transactions will appear here'}
                   </p>
                 </div>
               )}
@@ -1229,35 +1251,70 @@ export function ReferralDashboard() {
           {/* Profile Information Card */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <h3 className="text-lg font-semibold text-foreground">Profile Information</h3>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold text-foreground">Profile Information</h3>
+                </div>
+                {isProfileLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
 
               <div className="space-y-4">
                 {/* Email */}
                 <div className="border-b border-border pb-4">
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="mt-1 font-medium text-foreground">{MOCK_DATA.profile.email}</p>
+                  <p className="mt-1 font-medium text-foreground">{profile.email || '---'}</p>
                 </div>
 
                 {/* Display Name */}
                 <div className="border-b border-border pb-4">
                   <p className="text-sm text-muted-foreground">Display Name</p>
-                  <p className="mt-1 font-medium text-foreground">{MOCK_DATA.profile.displayName}</p>
+                  <p className="mt-1 font-medium text-foreground">{profile.displayName || '---'}</p>
                 </div>
 
                 {/* User ID */}
                 <div className="border-b border-border pb-4">
                   <p className="text-sm text-muted-foreground">User ID</p>
-                  <p className="mt-1 font-mono text-sm text-foreground">{MOCK_DATA.profile.userId}</p>
+                  <p className="mt-1 font-mono text-sm text-foreground">{profile.userId || '---'}</p>
                 </div>
 
                 {/* Referral Code */}
                 <div className="border-b border-border pb-4">
                   <p className="text-sm text-muted-foreground">Referral Code</p>
-                  <p className="mt-1 font-mono font-semibold text-foreground">{MOCK_DATA.profile.referralCode}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="font-mono font-semibold text-foreground">{profile.referralCode || referralCode || '---'}</p>
+                    {(profile.referralCode || referralCode) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopy('code')}
+                        className="h-6 w-6 p-0"
+                      >
+                        {copied === 'code' ? (
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Tier */}
+                {profile.tier && (
+                  <div className="border-b border-border pb-4">
+                    <p className="text-sm text-muted-foreground">Tier</p>
+                    <p className="mt-1 font-medium text-foreground">{profile.tier}</p>
+                  </div>
+                )}
+
+                {/* Commission Rate */}
+                {profile.commissionRate > 0 && (
+                  <div className="border-b border-border pb-4">
+                    <p className="text-sm text-muted-foreground">Commission Rate</p>
+                    <p className="mt-1 font-medium text-foreground">{profile.commissionRate}%</p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end">
@@ -1325,7 +1382,7 @@ export function ReferralDashboard() {
                     <p className="font-medium text-foreground">Language</p>
                     <p className="text-sm text-muted-foreground">Choose your preferred language</p>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{MOCK_DATA.profile.language}</span>
+                  <span className="text-sm font-medium text-foreground">{profile.language || 'English'}</span>
                 </div>
               </div>
             </CardContent>
