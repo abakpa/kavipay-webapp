@@ -2,12 +2,10 @@ import axios from 'axios';
 import { getIdToken } from '../firebase';
 
 // Referral API base URL
-// In development, use the Vite proxy to bypass CORS
-// In production, use the actual API URL
-const isDevelopment = import.meta.env.DEV;
-export const REFERRAL_API_BASE_URL = isDevelopment
-  ? '/referral-api'  // Proxied through Vite dev server
-  : (import.meta.env.VITE_REFERRAL_API_URL || 'https://ref-api.ploutoslabs.io/api/v1');
+// Use /referral-api path which is proxied:
+// - In development: Vite proxy (vite.config.ts)
+// - In production: Vercel rewrite (vercel.json)
+export const REFERRAL_API_BASE_URL = '/referral-api';
 
 // Create referral API instance
 export const referralApi = axios.create({
