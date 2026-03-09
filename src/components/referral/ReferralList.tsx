@@ -1,10 +1,10 @@
 import { Users, UserCheck, UserX, Loader2 } from 'lucide-react';
-import type { ReferralUser } from '@/types/referral';
+import type { ReferralListItem } from '@/lib/api/referral';
 import { formatReferralBonus } from '@/utils/referral';
 import { cn } from '@/lib/utils';
 
 interface ReferralListProps {
-  referrals: ReferralUser[];
+  referrals: ReferralListItem[];
   isLoading?: boolean;
   className?: string;
 }
@@ -18,7 +18,7 @@ function formatDate(dateString: string): string {
   });
 }
 
-function ReferralItem({ referral }: { referral: ReferralUser }) {
+function ReferralItem({ referral }: { referral: ReferralListItem }) {
   return (
     <div className="flex items-center justify-between rounded-xl bg-accent/50 p-4">
       <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ function ReferralItem({ referral }: { referral: ReferralUser }) {
         </div>
         <div>
           <p className="font-medium text-foreground">
-            {referral.name || referral.username || 'Anonymous'}
+            {referral.name || 'Anonymous'}
           </p>
           <p className="text-sm text-muted-foreground">
             Joined {formatDate(referral.joinedAt)}
@@ -44,7 +44,7 @@ function ReferralItem({ referral }: { referral: ReferralUser }) {
         </div>
       </div>
       <div className="text-right">
-        {referral.earnings !== undefined && referral.earnings > 0 && (
+        {referral.earnings > 0 && (
           <p className="font-medium text-emerald-500">
             +{formatReferralBonus(referral.earnings)}
           </p>
