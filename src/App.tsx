@@ -5,7 +5,7 @@ import { SessionTimeoutProvider } from '@/contexts/SessionTimeoutContext';
 import { VirtualCardProvider } from '@/contexts/VirtualCardContext';
 import { KYCProvider } from '@/contexts/KYCContext';
 import { WalletProvider } from '@/contexts/WalletContext';
-import { ReferralProvider } from '@/contexts/ReferralContext';
+
 import { UtilitiesProvider } from '@/contexts/UtilitiesContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { VerificationProvider } from '@/contexts/VerificationContext';
@@ -23,12 +23,10 @@ function App() {
               <KYCProvider>
                 <WalletProvider>
                   <UtilitiesProvider>
-                    <ReferralProvider>
                       <VirtualCardProvider>
                         <RouterProvider router={router} />
                         <NotificationToast />
                       </VirtualCardProvider>
-                    </ReferralProvider>
                   </UtilitiesProvider>
                 </WalletProvider>
               </KYCProvider>

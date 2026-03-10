@@ -37,7 +37,7 @@ import { NairaWithdrawal } from '@/pages/withdrawal';
 import { TransactionsPage, TransactionDetailPage } from '@/pages/transactions';
 
 // Referral
-import { ReferralDashboard } from '@/pages/referral/ReferralDashboard';
+import { ReferralPage } from '@/pages/referral/ReferralPage';
 
 // Profile
 import { Profile } from '@/pages/profile/Profile';
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
       { path: 'transactions/:id', element: <TransactionDetailPage /> },
 
       // Referral
-      { path: 'referral', element: <ReferralDashboard /> },
+      { path: 'referral', element: <ReferralPage /> },
 
       // Profile & Settings
       { path: 'profile', element: <Profile /> },
